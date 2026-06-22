@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Sistema Controle de Fechamentos Razarth</title>
+  <desc id="desc">Icone premium com escudo e grafico representando controle, fechamento e performance.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#0f5bd4"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8ec5ff"/>
+      <stop offset="100%" stop-color="#d7f2ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <path d="M256 78l132 48v97c0 87-51 164-132 211C175 387 124 310 124 223v-97l132-48z" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.22)" stroke-width="10"/>
+  <path d="M171 285l54-63 49 43 70-90" fill="none" stroke="url(#accent)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="171" cy="285" r="18" fill="#dff6ff"/>
+  <circle cx="225" cy="222" r="18" fill="#dff6ff"/>
+  <circle cx="274" cy="265" r="18" fill="#dff6ff"/>
+  <circle cx="344" cy="175" r="18" fill="#dff6ff"/>
+</svg>

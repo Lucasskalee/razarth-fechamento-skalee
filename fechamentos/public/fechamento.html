@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fechamento Mensal por Setor | Razarth</title>
+  <meta name="description" content="Auditoria mensal por setor com drill-down em notas e produtos, integrada ao Supabase.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css?v=20260428-2">
+  <link rel="stylesheet" href="./fechamento.css?v=20260511-3">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app-shell fechamento-shell">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">R</div>
+          <div class="brand-copy">
+            <span class="brand-kicker">Razarth Control</span>
+            <h1>Fechamento Mensal por Setor</h1>
+            <p>Painel operacional de conferencia mensal com leitura rapida, auditoria manual e drill-down em notas e produtos.</p>
+          </div>
+        </div>
+
+        <div class="sidebar-panel sidebar-highlight">
+          <span class="sidebar-label">Fluxo de auditoria</span>
+          <strong>Conferencia clara e rastreavel</strong>
+          <p>Analise a grade mensal, abra notas por setor e salve divergencias sem perder o contexto do periodo.</p>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Navegacao do fechamento">
+        <a class="side-link is-active" href="./fechamento.html">
+          <span>Fechamento</span>
+          <small>Mensal por setor</small>
+        </a>
+        <a class="side-link" href="./index.html">
+          <span>Dashboard</span>
+          <small>Voltar ao painel</small>
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-panel">
+          <span class="sidebar-label">Sincronizacao</span>
+          <strong id="connectionBadge">Conectando ao Supabase</strong>
+          <p id="lastSyncLabel">A leitura da grade, das notas e dos itens acontece sob demanda.</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="wrap">
+        <header class="topbar fechamento-topbar">
+          <div class="topbar-main">
+            <div class="title-block">
+              <span class="eyebrow">Auditoria premium de fechamentos</span>
+              <h2>Fechamento Mensal por Setor</h2>
+              <p>Consulte a grade mensal, abra notas por celula, confira produtos e registre observacoes operacionais com agilidade.</p>
+            </div>
+
+            <div class="topbar-meta">
+              <div class="meta-card">
+                <span class="meta-label">Ano</span>
+                <strong id="metaYear">--</strong>
+                <small>Recorte da auditoria</small>
+              </div>
+              <div class="meta-card meta-card-time">
+                <span class="meta-label">Atualizacao</span>
+                <strong id="currentTime">--:--:--</strong>
+                <small>Horario local</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="panel hero-panel fechamento-filters-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-tag">Filtros</span>
+              <h3>Recorte operacional</h3>
+              <p class="muted-note">Filtre por loja, ano, tipo e status antes de abrir a grade ou iniciar a auditoria manual.</p>
+            </div>
+          </div>
+
+          <div class="filters fechamento-filters">
+            <select id="storeFilter"><option value="TODAS">Todas as lojas</option></select>
+            <select id="yearFilter"><option value="2026">2026</option></select>
+            <select id="typeFilter"><option value="TODOS">Todos os tipos</option></select>
+            <select id="statusFilter"><option value="TODOS">Todos os status</option></select>
+          </div>
+
+          <div class="hero-filter-actions">
+            <button id="refreshBtn" type="button">Atualizar grade</button>
+            <button id="clearBtn" type="button">Limpar filtros</button>
+          </div>
+
+          <div id="quickStoreFilter" class="fechamento-store-switch" aria-label="Atalho de lojas"></div>
+
+          <div class="status-shell">
+            <div id="statusBanner" class="status info">Carregando fechamento mensal...</div>
+          </div>
+        </section>
+
+        <section class="cards fechamento-kpis" id="summaryCards"></section>
+
+        <section class="panel fechamento-grid-panel">
+          <div id="gridState"></div>
+          <div class="fechamento-grid-shell">
+            <div id="gridTable" class="fechamento-grid-table" role="table" aria-label="Grade mensal por setor"></div>
+          </div>
+        </section>
+
+        <section class="panel gerencial-panel" id="analiseGerencial">
+          <div class="panel-head">
+            <div>
+              <span class="panel-tag">Analise Gerencial</span>
+              <h3>Gestao executiva de perdas reais</h3>
+              <p class="muted-note">Compare lojas, produtos, preco medio, quantidade e justificativas sem misturar perda real com uso e consumo.</p>
+            </div>
+            <button id="managerRefreshBtn" type="button">Atualizar analise</button>
+          </div>
+
+          <div class="filters gerencial-filters">
+            <select id="managerMonthFilter"><option value="TODOS">Mes gerencial</option></select>
+            <select id="managerYearFilter"><option value="2026">2026</option></select>
+            <select id="managerStoreFilter"><option value="TODAS">Todas as lojas</option></select>
+            <select id="managerSectorFilter"><option value="TODOS">Todos os setores</option></select>
+            <select id="managerProductFilter"><option value="TODOS">Todos os produtos</option></select>
+            <select id="managerTypeFilter"><option value="TODOS">Todos os tipos</option></select>
+            <select id="managerReasonFilter"><option value="TODOS">Todos os motivos</option></select>
+          </div>
+
+          <div id="managerStatus" class="status info">Carregando analise gerencial...</div>
+          <section class="cards gerencial-kpis" id="managerCards"></section>
+
+          <div class="gerencial-grid">
+            <section class="gerencial-block">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Comparativo entre lojas</span>
+                  <h3>Perda por loja no setor selecionado</h3>
+                </div>
+              </div>
+              <div class="chart-box gerencial-chart"><canvas id="storeComparisonChart"></canvas></div>
+              <div id="storeComparisonList" class="gerencial-list"></div>
+            </section>
+
+            <section class="gerencial-block">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Evolucao mensal</span>
+                  <h3>Atual x mes anterior</h3>
+                </div>
+              </div>
+              <div class="chart-box gerencial-chart"><canvas id="monthlyEvolutionChart"></canvas></div>
+              <div id="managerDiagnosis" class="diagnosis-box"></div>
+            </section>
+          </div>
+
+          <div class="gerencial-grid">
+            <section class="gerencial-block">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Aumentos</span>
+                  <h3>Top produtos que mais aumentaram perda</h3>
+                </div>
+              </div>
+              <div id="increaseProducts" class="gerencial-list"></div>
+            </section>
+
+            <section class="gerencial-block">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Reducao</span>
+                  <h3>Top produtos que mais reduziram perda</h3>
+                </div>
+              </div>
+              <div id="decreaseProducts" class="gerencial-list"></div>
+            </section>
+          </div>
+
+          <section class="gerencial-block">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Ranking de produtos</span>
+                <h3>Impacto por produto, loja e setor</h3>
+              </div>
+            </div>
+            <div class="table-wrap gerencial-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Loja</th>
+                    <th>Setor</th>
+                    <th>Perda atual</th>
+                    <th>Perda anterior</th>
+                    <th>Var. R$</th>
+                    <th>Var. %</th>
+                    <th>Qtd atual</th>
+                    <th>Qtd ant.</th>
+                    <th>Preco atual</th>
+                    <th>Preco ant.</th>
+                    <th>Motivo</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="managerRankingBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="gerencial-grid">
+            <section class="gerencial-block">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Preco x quantidade</span>
+                  <h3 id="priceQuantityTitle">Produto selecionado</h3>
+                </div>
+              </div>
+              <div id="priceQuantityAnalysis" class="summary-grid"></div>
+            </section>
+
+            <section class="gerencial-block">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Justificativas</span>
+                  <h3>Motivos por produto e loja</h3>
+                </div>
+              </div>
+              <div class="chart-box gerencial-chart compact"><canvas id="reasonChart"></canvas></div>
+              <div id="reasonBreakdown" class="gerencial-list"></div>
+            </section>
+          </div>
+
+          <section class="gerencial-block">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Decisao gerencial</span>
+                <h3>Registro da acao tomada</h3>
+              </div>
+            </div>
+            <form id="decisionForm" class="decision-form">
+              <label class="fechamento-field">
+                <span>Decisao tomada</span>
+                <textarea id="decisionText" rows="3" placeholder="Ex.: Reforcar conferencia de cortes no acougue da Loja 7."></textarea>
+              </label>
+              <label class="fechamento-field">
+                <span>Responsavel</span>
+                <input id="decisionOwner" type="text" placeholder="Nome do responsavel">
+              </label>
+              <label class="fechamento-field">
+                <span>Prazo</span>
+                <input id="decisionDueDate" type="date">
+              </label>
+              <label class="fechamento-field">
+                <span>Status</span>
+                <select id="decisionStatus">
+                  <option value="Aberta">Aberta</option>
+                  <option value="Em andamento">Em andamento</option>
+                  <option value="Concluida">Concluida</option>
+                </select>
+              </label>
+              <label class="fechamento-field">
+                <span>Observacao</span>
+                <textarea id="decisionObservation" rows="3" placeholder="Observacoes complementares da decisao."></textarea>
+              </label>
+              <label class="fechamento-field">
+                <span>Data da decisao</span>
+                <input id="decisionDate" type="date">
+              </label>
+              <div class="fechamento-inline decision-actions">
+                <button type="submit">Salvar decisao</button>
+                <button id="decisionClearBtn" type="button">Limpar</button>
+              </div>
+            </form>
+            <div id="decisionSaved" class="decision-saved"></div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="drawerBackdrop" class="fechamento-drawer-backdrop" hidden></div>
+  <aside id="drawer" class="fechamento-drawer" hidden aria-labelledby="drawerTitle">
+    <div class="fechamento-drawer-head">
+      <div>
+        <span class="panel-tag">Drill-down</span>
+        <h3 id="drawerTitle">Detalhamento da celula</h3>
+        <div id="drawerMeta" class="fechamento-drawer-meta"></div>
+      </div>
+      <button id="drawerClose" type="button">Fechar</button>
+    </div>
+    <div id="drawerBody" class="fechamento-drawer-body"></div>
+  </aside>
+
+  <div id="pageLoading" class="loading-overlay" hidden>
+    <div class="loading-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <strong>Processando fechamento</strong>
+      <span id="loadingText">Aguarde enquanto a grade mensal e sincronizada.</span>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="./js/fechamento.js?v=20260511-3"></script>
+</body>
+</html>

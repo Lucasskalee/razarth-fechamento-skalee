@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Controle de Fechamentos Razarth</title>
+  <meta name="description" content="Sistema premium para controle de fechamentos com importacao XML, dashboard operacional, filtros avancados e persistencia no Supabase.">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Razarth">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">🛡️</div>
+<div class="brand-copy">
+           <span class="brand-kicker">Fechamento Skalee</span>
+           <h1>RAZARTH</h1>
+           <p>Importação XML • Classificação • Operação</p>
+         </div>
+        </div>
+
+<div class="sidebar-panel sidebar-highlight">
+           <span class="sidebar-label">Operação</span>
+           <strong>Fluxo seguro e contínuo</strong>
+           <p>Importe XMLs, acompanhe indicadores e mantenha histórico consolidado no Supabase.</p>
+         </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Navegacao principal">
+        <button class="side-link tabbtn is-active" data-tab="dash" type="button">
+          <span>Dashboard</span>
+          <small>Visao geral</small>
+        </button>
+        <button class="side-link tabbtn" data-tab="classif" type="button">
+          <span>Classificacao</span>
+          <small>Analise por nota</small>
+        </button>
+        <button class="side-link tabbtn" data-tab="items" type="button">
+          <span>Itens</span>
+          <small>Busca detalhada</small>
+        </button>
+        <div class="side-nav-group" aria-label="Submenu de fechamento">
+          <span class="side-nav-group-title">Fechamento</span>
+          <a class="side-link side-link-sub side-link-shortcut" href="./fechamento.html">
+            <span>Mensal por setor</span>
+            <small>Abertura completa</small>
+          </a>
+          <button class="side-link side-link-sub tabbtn" data-tab="classif-nf" type="button">
+            <span>Classificar NF</span>
+            <small>Distribuicao operacional</small>
+          </button>
+          <button class="side-link side-link-sub tabbtn" data-tab="nf-revisao" type="button">
+            <span>Revisao</span>
+            <small>Notas classificadas</small>
+          </button>
+          <button class="side-link side-link-sub tabbtn" data-tab="nf-historico" type="button">
+            <span>Historico</span>
+            <small>Trilha de lancamentos</small>
+          </button>
+        </div>
+      </nav>
+
+<div class="sidebar-bottom">
+         <div class="sidebar-panel">
+           <span class="sidebar-label">Status</span>
+           <strong id="connectionBadge">Sincronização automática</strong>
+           <p id="lastSyncLabel">Dados atualizam sem recarga manual.</p>
+         </div>
+       </div>
+    </aside>
+
+    <main class="main">
+      <div class="wrap">
+        <header class="topbar">
+          <div class="topbar-main">
+<div class="title-block">
+               <span class="eyebrow">Dashboard</span>
+               <h2>Visão geral dos fechamentos</h2>
+               <p>Todos os módulos ativos: importação XML, Supabase, filtros e classificação.</p>
+             </div>
+
+            <div class="topbar-meta">
+              <div class="meta-card">
+                <span class="meta-label">Hoje</span>
+                <strong id="currentDate">--</strong>
+                <small id="currentWeekday">--</small>
+              </div>
+              <div class="meta-card meta-card-time">
+                <span class="meta-label">Horario</span>
+                <strong id="currentTime">--:--:--</strong>
+                <small>Atualizacao em tempo real</small>
+              </div>
+              <button id="themeToggle" class="theme-toggle" type="button" aria-label="Alternar tema" aria-pressed="false">
+                <span class="theme-toggle-icon" aria-hidden="true">◐</span>
+                <span id="themeToggleLabel">Tema escuro</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="toolbar toolbar-top">
+            <button id="csvBtn" type="button">Exportar CSV</button>
+            <button id="reportBtn" type="button">Relatorio A4</button>
+            <a class="topbar-link" href="./fechamento.html">Abrir Fechamento Mensal</a>
+          </div>
+        </header>
+
+<section class="panel hero-panel">
+           <div class="hero-grid">
+             <div class="hero-copy">
+               <span class="hero-chip">Importação</span>
+               <h3>Entrada operacional com persistência imediata</h3>
+               <p class="panel-copy">Selecione XMLs para processar e salvar no Supabase.</p>
+             </div>
+
+          <div class="hero-actions">
+              <label class="file-picker" for="xmlFiles">Selecionar XMLs</label>
+              <input type="file" id="xmlFiles" accept=".xml,text/xml" multiple hidden>
+              <label class="file-picker secondary" for="xmlFolder">Selecionar pasta</label>
+              <input type="file" id="xmlFolder" accept=".xml,text/xml" webkitdirectory directory multiple hidden>
+              <button id="clearDatabaseBtn" class="danger-btn" type="button" hidden>Limpar dados de importacao</button>
+              <select id="basis">
+                <option value="competence">Base: Competencia</option>
+                <option value="emission">Base: Emissao</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filters filters-premium">
+            <select id="storeFilter"><option value="TODAS">Todas as lojas</option></select>
+            <select id="typeFilter"><option value="TODOS">Todos os tipos</option></select>
+            <select id="sectorFilter"><option value="TODOS">Todos os setores</option></select>
+            <select id="reasonFilter"><option value="TODOS">Todos os motivos</option></select>
+            <select id="monthFilter"><option value="TODOS">Todos os meses</option></select>
+          </div>
+
+          <div class="hero-filter-actions">
+            <button id="pendingOnlyBtn" class="pending-toggle" type="button" aria-pressed="false">Somente pendentes</button>
+          </div>
+
+          <div class="status-shell">
+            <div id="statusBanner" class="status info">Carregando dados do banco...</div>
+          </div>
+        </section>
+
+        <section id="dash" class="tab is-active">
+          <section id="pendingExecutive" class="panel ops-alert">
+            <div class="ops-alert-head">
+              <div>
+                <span class="panel-tag">Pendencias operacionais</span>
+                <h3 id="pendingExecutiveTitle">Analisando itens sem motivo no filtro atual</h3>
+                <p id="pendingExecutiveText" class="muted-note">Acompanhe rapidamente o volume pendente e decida onde agir primeiro.</p>
+              </div>
+              <span id="pendingExecutiveBadge" class="status-badge info">Em analise</span>
+            </div>
+
+            <div class="ops-grid">
+              <article class="ops-metric">
+                <span class="ops-label">Itens sem motivo</span>
+                <strong id="pendingItemsCount">0</strong>
+                <small>Itens ainda sem classificacao no recorte atual</small>
+              </article>
+              <article class="ops-metric">
+                <span class="ops-label">Notas com pendencia</span>
+                <strong id="pendingNotesCount">0</strong>
+                <small>Notas que exigem acao imediata</small>
+              </article>
+              <article class="ops-metric">
+                <span class="ops-label">Classificacao concluida</span>
+                <strong id="pendingCompletion">0%</strong>
+                <small>Percentual de itens com motivo definido</small>
+              </article>
+              <article class="ops-metric">
+                <span class="ops-label">Prioridade</span>
+                <strong id="pendingFocus">Sem prioridade</strong>
+                <small id="pendingFocusMeta">Nenhuma pendencia identificada.</small>
+              </article>
+            </div>
+          </section>
+
+          <div class="cards cards-kpis">
+            <article class="card kpi-card">
+              <div class="label">Total de notas</div>
+              <div class="value" id="kpiNotes">0</div>
+              <div class="meta">Notas disponiveis no recorte atual</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="label">Valor total</div>
+              <div class="value" id="kpiTotal">R$ 0,00</div>
+              <div class="meta">Volume consolidado do periodo filtrado</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="label">Perdas</div>
+              <div class="value" id="kpiLoss">R$ 0,00</div>
+              <div class="meta">Saidas classificadas como perdas</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="label">Uso/Consumo</div>
+              <div class="value" id="kpiUsage">R$ 0,00</div>
+              <div class="meta">Uso interno e consumo operacional</div>
+            </article>
+            <article class="card kpi-card kpi-card-pending" id="pendingKpiCard">
+              <div class="label">Itens sem motivo</div>
+              <div class="value" id="kpiPending">0</div>
+              <div class="meta" id="kpiPendingMeta">Nenhuma pendencia no filtro atual</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="label">Loja com maior impacto</div>
+              <div class="value" id="kpiStore">-</div>
+              <div class="meta">Maior valor acumulado no filtro atual</div>
+            </article>
+          </div>
+
+          <div class="grid2">
+            <section class="panel chart-panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Analise temporal</span>
+                  <h3>Movimentacao mensal</h3>
+                  <p class="muted-note">Acompanhe a evolucao de perdas e uso/consumo por periodo com leitura mais limpa e consistente.</p>
+                </div>
+              </div>
+              <div class="chart-box monthly"><canvas id="monthChart"></canvas></div>
+            </section>
+
+            <section class="panel chart-panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Composicao</span>
+                  <h3>Distribuicao</h3>
+                  <p class="muted-note">Visao resumida por tipo ou por motivo, respeitando exatamente os filtros ativos.</p>
+                </div>
+              </div>
+              <div class="chart-box type"><canvas id="typeChart"></canvas></div>
+            </section>
+          </div>
+
+          <div class="grid2 sector-chart-grid">
+            <section class="panel chart-panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Setores</span>
+                  <h3>Perdas por setor</h3>
+                  <p class="muted-note">Distribuicao dos valores por setor dentro do filtro atual, sem perder o contexto de notas, itens e pendencias.</p>
+                </div>
+              </div>
+              <div class="chart-box sector-chart-shell">
+                <canvas id="sectorChart"></canvas>
+                <div id="sectorChartEmpty" class="empty" hidden>Nenhum dado por setor para o filtro atual.</div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Maior impacto</span>
+                  <h3>Setor lider</h3>
+                  <p class="muted-note">Setor com maior valor dentro do filtro atual, com peso percentual sobre o total analisado.</p>
+                </div>
+              </div>
+              <div id="sectorChartSummary" class="mini"><div class="empty">Nenhum dado por setor para o filtro atual.</div></div>
+            </section>
+          </div>
+
+          <div class="split">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Lojas</span>
+                  <h3>Resumo por loja</h3>
+                  <p class="muted-note">Comparativo entre notas, perdas, uso/consumo e pendencias por loja.</p>
+                </div>
+              </div>
+              <div class="mini" id="storesBody"><div class="empty">Nenhum XML importado ainda.</div></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Setores</span>
+                  <h3>Resumo por setor</h3>
+                  <p class="muted-note">Setores com maior peso financeiro, motivos predominantes e pendencias.</p>
+                </div>
+              </div>
+              <div class="mini" id="sectorBox"><div class="empty">Nenhum XML importado ainda.</div></div>
+            </section>
+          </div>
+
+          <section class="panel section-gap">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Ranking</span>
+                <h3>Ranking de produtos</h3>
+                <p class="muted-note">Produtos consolidados com base no recorte atual de loja, tipo, setor, motivo e mes.</p>
+              </div>
+            </div>
+            <div id="productRanking" class="rank-list"><div class="empty">Nenhum XML importado ainda.</div></div>
+          </section>
+        </section>
+
+        <section id="classif" class="tab">
+          <div class="split">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Classificacao</span>
+                  <h3>Classificacao por item</h3>
+                  <p class="muted-note">Selecione uma nota e classifique itens individualmente ou em lote com salvamento automatico.</p>
+                </div>
+              </div>
+              <div class="toolbar">
+                <select id="noteStoreFilter"><option value="TODAS">Todas as lojas</option></select>
+                <select id="noteMonthFilter"><option value="TODOS">Todos os meses</option></select>
+                <select id="noteSelect"><option value="">Selecione uma nota</option></select>
+              </div>
+              <div class="toolbar">
+                <select id="applyAll"><option value="">Aplicar para todos</option></select>
+                <button id="applyAllBtn" type="button">Aplicar</button>
+                <select id="applySelected"><option value="">Aplicar para selecionados</option></select>
+                <button id="applySelectedBtn" type="button">Selecionados</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" id="selectAll" aria-label="Selecionar todos"></th>
+                      <th>Produto</th>
+                      <th>Qtd</th>
+                      <th>Valor</th>
+                      <th>Motivo</th>
+                    </tr>
+                  </thead>
+                  <tbody id="classBody"><tr><td colspan="5"><div class="empty">Selecione uma nota para comecar a classificacao.</div></td></tr></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Resumo rapido</span>
+                  <h3>Resumo da nota</h3>
+                  <p class="muted-note">Revisao operacional antes de salvar classificacoes e ajustes de setor.</p>
+                </div>
+              </div>
+              <div id="noteSummary" class="mini"><div class="empty">Nenhuma nota selecionada.</div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="items" class="tab">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Consulta detalhada</span>
+                <h3>Itens detalhados</h3>
+                <p class="muted-note">Lista completa dos itens importados com pesquisa por produto e filtros ativos.</p>
+              </div>
+            </div>
+            <div class="toolbar">
+              <input type="search" id="productSearch" placeholder="Pesquisar produto">
+            </div>
+            <div id="productSummary"><div class="empty">Pesquise um produto para ver resumo por periodo, notas e motivos.</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Emissao</th>
+                    <th>Competencia</th>
+                    <th>Loja</th>
+                    <th>Tipo</th>
+                    <th>Setor</th>
+                    <th>Nota</th>
+                    <th>Produto</th>
+                    <th>Qtd</th>
+                    <th>Valor</th>
+                    <th>Motivo</th>
+                  </tr>
+                </thead>
+                <tbody id="itemsBody"><tr><td colspan="10"><div class="empty">Nenhum XML importado ainda.</div></td></tr></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section id="classif-nf" class="tab">
+          <section class="panel closing-panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Fechamento inteligente</span>
+                <h3>Classificar NF</h3>
+                <p class="muted-note">Fluxo visual de busca da nota, distribuicao por loja/setor/competencia e revisao operacional antes da integracao com banco.</p>
+              </div>
+            </div>
+
+            <div class="nf-search-grid">
+              <div class="closing-field">
+                <span>Numero NF</span>
+                <input id="nfNumberInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 9775">
+              </div>
+              <button id="nfReadBarcodeBtn" type="button">Ler codigo de barras</button>
+              <button id="nfSearchBtn" type="button">Buscar</button>
+            </div>
+
+            <div id="nfSearchResult" class="nf-note-card" hidden>
+              <div class="mini-item"><strong>NF</strong><span id="nfResultNumber">-</span></div>
+              <div class="mini-item"><strong>Fornecedor</strong><span id="nfResultSupplier">-</span></div>
+              <div class="mini-item"><strong>Valor</strong><span id="nfResultValue">R$ 0,00</span></div>
+              <div class="mini-item"><strong>Data</strong><span id="nfResultDate">-</span></div>
+              <div class="mini-item"><strong>Status</strong><span id="nfResultStatus">Nova</span></div>
+              <div class="mini-item"><strong>Itens</strong><span id="nfResultItems">-</span></div>
+              <div class="mini-item"><strong>Chave NFE</strong><span id="nfResultChave">-</span></div>
+            </div>
+
+            <div id="nfMultipleResults" class="summary-alert warning" hidden>
+              <strong>Foram encontradas multiplas notas com o mesmo numero.</strong>
+              <span>Escolha o registro correto na lista para seguir com a classificacao.</span>
+              <select id="nfMultipleSelect"></select>
+            </div>
+
+            <div id="nfImpactPanel" class="nf-impact-panel" hidden></div>
+
+            <div class="split nf-flow-split">
+              <section class="panel">
+                <div class="panel-head">
+                  <div>
+                    <span class="panel-tag">Destino da nota</span>
+                    <h3>Distribuicao</h3>
+                  </div>
+                </div>
+
+                <div class="nf-distribution-grid">
+                  <label class="closing-field">
+                    <span>Loja</span>
+                    <select id="nfStoreSelect">
+                      <option value="SOL1">SOL1</option>
+                      <option value="SOL2">SOL2</option>
+                      <option value="SOL3">SOL3</option>
+                      <option value="SOL4">SOL4</option>
+                      <option value="CD">CD</option>
+                    </select>
+                  </label>
+
+                  <label class="closing-field">
+                    <span>Setor</span>
+                    <select id="nfSectorSelect">
+                      <option value="Açougue">Acougue</option>
+                      <option value="FLV">FLV</option>
+                      <option value="Padaria">Padaria</option>
+                      <option value="Producao Padaria">Producao Padaria</option>
+                      <option value="Bebidas">Bebidas</option>
+                      <option value="Loja/Deposito">Loja/Deposito</option>
+                      <option value="Frios e Congelados">Frios e Congelados</option>
+                      <option value="Mercearia">Mercearia</option>
+                      <option value="Administrativo">Administrativo</option>
+                    </select>
+                  </label>
+
+                  <label class="closing-field">
+                    <span>Competencia</span>
+                    <select id="nfCompetenceSelect">
+                      <option value="jan/2026">Janeiro/2026</option>
+                      <option value="fev/2026">Fevereiro/2026</option>
+                      <option value="mar/2026" selected>Marco/2026</option>
+                      <option value="abr/2026">Abril/2026</option>
+                      <option value="mai/2026">Maio/2026</option>
+                      <option value="jun/2026">Junho/2026</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label class="checkbox-row">
+                  <input id="nfAutoUpdateToggle" type="checkbox" checked>
+                  <span>Atualizar fechamento automaticamente</span>
+                </label>
+
+                <div class="toolbar closing-toolbar">
+                  <button id="nfSaveLaunchBtn" type="button">Salvar e lancar</button>
+                </div>
+
+                <div id="nfLaunchFeedback" class="summary-alert success" hidden></div>
+
+                <section class="panel nf-items-panel">
+                  <div class="panel-head">
+                    <div>
+                      <span class="panel-tag">Itens reais</span>
+                      <h3>Produtos da nota</h3>
+                      <p class="muted-note">Os itens carregados da NF aparecem aqui para facilitar a conferência operacional antes do lançamento.</p>
+                    </div>
+                  </div>
+                  <div class="table-wrap nf-items-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Produto</th>
+                          <th>Qtd</th>
+                          <th>Unitario</th>
+                          <th>Valor</th>
+                          <th>Setor</th>
+                          <th>Motivo</th>
+                        </tr>
+                      </thead>
+                      <tbody id="nfItemsBody">
+                        <tr><td colspan="6"><div class="empty">Busque uma NF para ver os itens reais.</div></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </section>
+
+              <section class="panel">
+                <div class="panel-head">
+                  <div>
+                    <span class="panel-tag">Automacao futura</span>
+                    <h3>Sugestao de destino</h3>
+                    <p class="muted-note">Quando existir historico para o fornecedor, o sistema ja prepara o destino habitual para voce aplicar com um clique.</p>
+                  </div>
+                </div>
+                <div id="nfSuggestionBox" class="summary-alert warning">
+                  <strong>Nenhuma sugestao ainda</strong>
+                  <span>Busque uma NF e salve os primeiros lancamentos para construir o historico de destino habitual.</span>
+                  <button id="nfApplySuggestionBtn" type="button" disabled>Aplicar</button>
+                </div>
+              </section>
+            </div>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <span class="panel-tag">Revisao</span>
+                  <h3>Notas classificadas</h3>
+                  <p class="muted-note">Conferencia operacional antes de consolidar o fechamento mensal.</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>NF</th>
+                      <th>Loja</th>
+                      <th>Setor</th>
+                      <th>Mes</th>
+                      <th>Valor</th>
+                      <th>Usuario</th>
+                      <th>Status</th>
+                      <th>Acoes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nfReviewBody">
+                    <tr><td colspan="8"><div class="empty">Nenhuma NF classificada ainda.</div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section id="nf-revisao" class="tab">
+          <section class="panel closing-panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Fechamento inteligente</span>
+                <h3>Revisao</h3>
+                <p class="muted-note">Conferencia de todos os lancamentos. Avance o status, edite ou desfaca antes de consolidar o fechamento mensal.</p>
+              </div>
+            </div>
+
+            <div id="nfRevisaoStats" class="ops-grid" style="margin-bottom:16px"></div>
+
+            <div class="toolbar">
+              <select id="nfRevisaoStore">
+                <option value="TODAS">Todas as lojas</option>
+                <option value="SOL1">SOL1</option>
+                <option value="SOL2">SOL2</option>
+                <option value="SOL3">SOL3</option>
+                <option value="SOL4">SOL4</option>
+                <option value="CD">CD</option>
+              </select>
+              <select id="nfRevisaoStatus">
+                <option value="TODOS">Todos os status</option>
+                <option value="CLASSIFIED">Classificada</option>
+                <option value="CONFIRMED">Confirmada</option>
+                <option value="CLOSED">Fechada</option>
+                <option value="PENDING">Pendente</option>
+              </select>
+              <select id="nfRevisaoCompet">
+                <option value="TODAS">Todas as competencias</option>
+              </select>
+              <button id="nfRevisaoRefreshBtn" type="button">Atualizar</button>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>NF</th>
+                    <th>Loja</th>
+                    <th>Setor</th>
+                    <th>Competencia</th>
+                    <th>Valor</th>
+                    <th>Usuario</th>
+                    <th>Status</th>
+                    <th>Acoes</th>
+                  </tr>
+                </thead>
+                <tbody id="nfRevisaoBody">
+                  <tr><td colspan="8"><div class="empty">Nenhum lancamento ainda.</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section id="nf-historico" class="tab">
+          <section class="panel closing-panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Fechamento inteligente</span>
+                <h3>Historico</h3>
+                <p class="muted-note">Trilha completa de todos os lancamentos e mudancas de status em ordem cronologica.</p>
+              </div>
+            </div>
+            <div id="nfHistoricoBody" class="nf-historico-feed">
+              <div class="empty">Nenhuma transicao registrada ainda.</div>
+            </div>
+          </section>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay" hidden>
+    <div class="loading-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <strong>Processando dados</strong>
+      <span id="loadingText">Aguarde enquanto o sistema atualiza as informacoes.</span>
+      <div id="loadingProgressShell" class="loading-progress-shell" hidden>
+        <div class="loading-progress-meta" id="loadingProgressMeta">Preparando importacao...</div>
+        <div class="loading-progress-track" aria-hidden="true">
+          <div id="loadingProgressBar" class="loading-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <div id="importSummaryModal" class="modal-shell" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <span class="panel-tag">Resumo da importacao</span>
+          <h3 id="importSummaryTitle">Resultado da importacao</h3>
+        </div>
+        <button id="importSummaryClose" type="button">Fechar</button>
+      </div>
+      <div id="importSummaryContent" class="import-summary-content"></div>
+    </div>
+  </div>
+
+  <div id="resetImportModal" class="modal-shell" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <span class="panel-tag">Limpeza de teste</span>
+          <h3>Limpar dados de importacao</h3>
+        </div>
+        <button id="resetImportClose" type="button">Fechar</button>
+      </div>
+      <div class="import-summary-content">
+        <div class="summary-alert warning">
+          <strong>Essa acao apagará todas as notas e produtos importados. Use apenas para testes.</strong>
+          <span>Somente as tabelas de importacao serao afetadas. Dados estruturais do sistema nao serao apagados.</span>
+        </div>
+        <label class="closing-field">
+          <span>Digite exatamente LIMPAR para confirmar</span>
+          <input id="resetImportConfirmInput" type="text" autocomplete="off" placeholder="LIMPAR">
+        </label>
+        <label class="checkbox-row">
+          <input id="resetImportMonthlyToggle" type="checkbox">
+          <span>Tambem limpar dados temporarios do fechamento mensal (monthly_closing_observations, monthly_closing_notes e monthly_closing_entries)</span>
+        </label>
+        <div class="toolbar">
+          <button id="resetImportConfirmBtn" class="danger-btn" type="button">Executar limpeza</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js?v=20260619-3"></script>
+</body>
+</html>

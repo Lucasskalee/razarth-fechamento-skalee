@@ -1,0 +1,766 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Perdas</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#eef2f7;
+  --surface:#ffffff;
+  --surface-soft:#f8fafc;
+  --sidebar:#081a3a;
+  --sidebar-active:#283655;
+  --text:#0f172a;
+  --muted:#64748b;
+  --line:#d7dfeb;
+  --line-strong:#b9c5d9;
+  --accent:#0f172a;
+  --success:#059669;
+  --warning:#d97706;
+  --danger:#dc2626;
+  --shadow:0 16px 40px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+  color:var(--text);
+  background:linear-gradient(180deg,#f4f7fb 0%,#edf2f8 100%);
+}
+button,select,input{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  font:inherit;
+}
+button{
+  cursor:pointer;
+  font-weight:700;
+  transition:transform .18s ease, background .18s ease, border-color .18s ease;
+}
+button:hover{transform:translateY(-1px)}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+.app-shell{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr);
+}
+.sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:28px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+  background:linear-gradient(180deg,#08152f 0%,#0b1d46 100%);
+  color:#fff;
+}
+.brand{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+}
+.brand-badge{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:18px;
+}
+.brand h2{
+  margin:0;
+  font-size:16px;
+}
+.brand p{
+  margin:5px 0 0;
+  font-size:13px;
+  line-height:1.4;
+  color:rgba(255,255,255,.76);
+}
+.side-nav{
+  display:grid;
+  gap:10px;
+}
+.side-link{
+  width:100%;
+  text-align:left;
+  border:none;
+  border-radius:16px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  padding:15px 14px;
+  font-size:15px;
+  font-weight:600;
+}
+.side-link:hover{background:rgba(255,255,255,.12)}
+.side-link.active{
+  background:var(--sidebar-active);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.side-footer{
+  margin-top:auto;
+  padding:14px;
+  border-radius:18px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.82);
+  font-size:13px;
+  line-height:1.45;
+}
+.main{
+  padding:28px 24px 36px;
+}
+.wrap{
+  max-width:1320px;
+  margin:0 auto;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.title-block h1{
+  margin:0;
+  font-size:31px;
+  line-height:1.15;
+}
+.sub{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:15px;
+  max-width:760px;
+}
+.toolbar,.filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.toolbar-top{
+  justify-content:flex-end;
+}
+.panel,.card{
+  background:var(--surface);
+  border-radius:22px;
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.drop{
+  border:1px dashed var(--line-strong);
+  background:rgba(255,255,255,.78);
+}
+.panel-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.panel h3{
+  margin:0 0 8px;
+  font-size:18px;
+}
+.panel-copy,.muted-note{
+  color:var(--muted);
+  line-height:1.45;
+}
+.stack{
+  display:grid;
+  gap:14px;
+}
+.filters{
+  margin-top:4px;
+}
+.filters>*{
+  min-width:160px;
+}
+.status{
+  margin-top:10px;
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid #f0b46d;
+  background:#fff7ed;
+  color:#c2410c;
+}
+.status.ok{
+  border-color:#86efac;
+  background:#f0fdf4;
+  color:#166534;
+}
+.connection-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.connection-grid input{
+  width:100%;
+}
+.span-2{
+  grid-column:span 2;
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:16px;
+  margin:18px 0;
+}
+.card{
+  min-height:120px;
+}
+.label{
+  font-size:14px;
+  color:var(--muted);
+}
+.value{
+  margin-top:8px;
+  font-size:30px;
+  font-weight:800;
+}
+.meta{
+  margin-top:10px;
+  font-size:13px;
+  color:var(--muted);
+}
+.meta.success{color:var(--success)}
+.meta.warning{color:var(--warning)}
+.meta.danger{color:var(--danger)}
+.grid2{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:16px;
+}
+.chart-panel{
+  padding-bottom:14px;
+}
+.chart-box{
+  position:relative;
+  width:100%;
+}
+.chart-box.monthly{
+  height:260px;
+}
+.chart-box.type{
+  height:260px;
+  max-width:320px;
+  margin:0 auto;
+}
+.split{
+  display:grid;
+  grid-template-columns:1.45fr .95fr;
+  gap:16px;
+  margin-top:16px;
+}
+.table-wrap{
+  overflow:auto;
+  max-height:560px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:11px 10px;
+  border-bottom:1px solid #e6ebf2;
+  text-align:left;
+  font-size:14px;
+}
+th{
+  position:sticky;
+  top:0;
+  background:#fff;
+  color:var(--muted);
+  z-index:1;
+}
+.mini{
+  display:grid;
+  gap:10px;
+}
+.mini-item{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:13px 14px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:var(--surface-soft);
+}
+.mini-item.editor{
+  display:block;
+}
+.sector-accordion{
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:var(--surface-soft);
+  overflow:hidden;
+}
+.sector-accordion summary{
+  list-style:none;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:14px 16px;
+  cursor:pointer;
+  font-weight:700;
+}
+.sector-accordion summary::-webkit-details-marker{
+  display:none;
+}
+.sector-meta{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+.sector-details{
+  display:grid;
+  gap:8px;
+  padding:0 14px 14px;
+}
+.sector-reason{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px 14px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid #e6ebf2;
+}
+.sector-reason strong{
+  font-size:14px;
+}
+.sector-reason span{
+  color:var(--muted);
+  font-size:12px;
+}
+.store-month-grid{
+  display:grid;
+  gap:8px;
+  padding:0 14px 14px;
+}
+.store-month-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.1fr) repeat(4,minmax(0,1fr));
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid #e6ebf2;
+  background:#fff;
+}
+.store-month-row strong{
+  font-size:14px;
+}
+.store-month-row span{
+  color:var(--muted);
+  font-size:12px;
+}
+.inline-edit{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.inline-edit.danger-row{
+  margin-top:0;
+}
+.inline-edit select{
+  flex:1;
+  min-width:180px;
+}
+.danger-btn{
+  background:#fff1f2;
+  color:#b91c1c;
+  border-color:#fecdd3;
+}
+.hint{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin:14px 0;
+}
+.summary-card{
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface-soft);
+}
+.summary-card strong{
+  display:block;
+  font-size:22px;
+  margin-top:6px;
+}
+.reason-list{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+.reason-chip{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+}
+.rank-list{
+  display:grid;
+  gap:10px;
+}
+.rank-row{
+  display:grid;
+  grid-template-columns:auto minmax(0,1.7fr) repeat(4,minmax(0,.8fr));
+  gap:12px;
+  align-items:center;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface-soft);
+}
+.rank-pos{
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  font-weight:800;
+  background:#e2e8f0;
+  color:var(--accent);
+}
+.rank-main strong{
+  display:block;
+  font-size:14px;
+}
+.rank-main span,.rank-cell span{
+  color:var(--muted);
+  font-size:12px;
+}
+.rank-cell strong{
+  display:block;
+  font-size:14px;
+}
+.empty{
+  padding:24px;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed var(--line);
+  border-radius:16px;
+  background:#fbfdff;
+}
+.tab{display:none}
+.tab.active{display:block}
+@media(max-width:1180px){
+  .app-shell{grid-template-columns:1fr}
+  .sidebar{
+    position:relative;
+    height:auto;
+  }
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .grid2,.split{grid-template-columns:1fr}
+  .chart-box.type{max-width:none}
+}
+@media(max-width:720px){
+  .main{padding:18px 14px 28px}
+  .title-block h1{font-size:25px}
+  .cards{grid-template-columns:1fr}
+  .toolbar-top{justify-content:flex-start}
+  .connection-grid{grid-template-columns:1fr}
+  .span-2{grid-column:span 1}
+  .filters>*{min-width:100%}
+  .summary-grid{grid-template-columns:1fr}
+  .chart-box.monthly,.chart-box.type{height:220px}
+  .rank-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<div class="brand">
+<div class="brand-badge">â–§</div>
+<div>
+<h2>Painel de Perdas</h2>
+<p>XML consolidado por loja, mês, setor e produto.</p>
+</div>
+</div>
+<nav class="side-nav">
+<button class="side-link tabbtn primary active" data-tab="dash">Visão Geral</button>
+<button class="side-link tabbtn" data-tab="classif">Classificação</button>
+<button class="side-link tabbtn" data-tab="items">Itens</button>
+</nav>
+<div class="side-footer">
+Os dados são processados localmente no navegador e podem ser exportados em JSON ou CSV quando você quiser.
+</div>
+</aside>
+
+<main class="main">
+<div class="wrap">
+<div class="top">
+<div class="title-block">
+<h1>Dashboard Operacional de Perdas</h1>
+<div class="sub">Importe XMLs de perdas e uso/consumo, filtre por loja e acompanhe os números com uma navegação lateral mais organizada.</div>
+</div>
+<div class="toolbar toolbar-top">
+<button id="demoBtn">Carregar demo</button>
+<button id="saveBtn">Salvar dados</button>
+<button id="loadCloudBtn">Carregar Supabase</button>
+<button id="jsonBtn">Exportar JSON</button>
+<button id="csvBtn" class="primary">Exportar CSV</button>
+<button id="reportBtn">Relatorio A4</button>
+<button id="clearBtn">Limpar dados</button>
+</div>
+</div>
+
+<div class="panel drop">
+<div class="panel-head">
+<div>
+<h3>Importação de XMLs</h3>
+<div class="panel-copy">Selecione um ou vários arquivos XML. O sistema lê tudo no navegador, sem depender de servidor.</div>
+</div>
+</div>
+<div class="stack">
+<div class="connection-grid">
+<input type="url" id="supabaseUrl" class="span-2" placeholder="https://SEU-PROJETO.supabase.co">
+<input type="password" id="supabaseKey" placeholder="SUPABASE_ANON_KEY">
+</div>
+<div class="muted-note">Preencha a URL e a anon key do Supabase para salvar um snapshot online compartilhado. Sem isso, o sistema continua usando o navegador local.</div>
+<div class="toolbar">
+<input type="file" id="xmlFiles" accept=".xml,text/xml" multiple>
+<select id="basis"><option value="competence">Base: Competência</option><option value="emission">Base: Emissão</option></select>
+</div>
+<div class="filters">
+<select id="storeFilter"><option value="TODAS">Todas as lojas</option></select>
+<select id="typeFilter"><option value="TODOS">Todos os tipos</option></select>
+<select id="sectorFilter"><option value="TODOS">Todos os setores</option></select>
+<select id="reasonFilter"><option value="TODOS">Todos os motivos</option></select>
+<select id="monthFilter"><option value="TODOS">Todos os meses</option></select>
+</div>
+</div>
+<div class="status" id="status">Nenhum dado carregado.</div>
+</div>
+
+<div id="dash" class="tab active">
+<div class="cards">
+<div class="card"><div class="label">Total de notas</div><div class="value" id="kpiNotes">0</div><div class="meta">Quantidade de notas lidas</div></div>
+<div class="card"><div class="label">Valor total</div><div class="value" id="kpiTotal">R$ 0,00</div><div class="meta danger">Volume geral do período filtrado</div></div>
+<div class="card"><div class="label">Perdas</div><div class="value" id="kpiLoss">R$ 0,00</div><div class="meta warning">Consolidado de perdas</div></div>
+<div class="card"><div class="label">Uso/Consumo</div><div class="value" id="kpiUsage">R$ 0,00</div><div class="meta success">Saídas classificadas como uso interno</div></div>
+<div class="card"><div class="label">Loja com maior impacto</div><div class="value" id="kpiStore">-</div><div class="meta">Maior valor no filtro atual</div></div>
+</div>
+<div class="grid2">
+<div class="panel chart-panel">
+<div class="panel-head">
+<div>
+<h3>Movimentação mensal</h3>
+<div class="muted-note">Acompanhe a evolução mensal das perdas e do uso/consumo.</div>
+</div>
+</div>
+<div class="chart-box monthly"><canvas id="monthChart"></canvas></div>
+</div>
+<div class="panel chart-panel">
+<div class="panel-head">
+<div>
+<h3>Distribuição por tipo</h3>
+<div class="muted-note">Participação de cada tipo dentro do período filtrado.</div>
+</div>
+</div>
+<div class="chart-box type"><canvas id="typeChart"></canvas></div>
+</div>
+</div>
+<div class="split">
+<div class="panel">
+<div class="panel-head">
+<div>
+<h3>Resumo por loja</h3>
+<div class="muted-note">Comparativo rápido entre notas, perdas e uso/consumo.</div>
+</div>
+</div>
+<div class="mini" id="storesBody"><div class="empty">Sem dados</div></div>
+</div>
+<div class="panel">
+<div class="panel-head">
+<div>
+<h3>Resumo por setor</h3>
+<div class="muted-note">Setores com maior peso no consolidado.</div>
+</div>
+</div>
+<div class="mini" id="sectorBox"><div class="empty">Sem dados</div></div>
+</div>
+</div>
+<div class="panel" style="margin-top:16px">
+<div class="panel-head">
+<div>
+<h3>Ranking de produtos</h3>
+<div class="muted-note">Produtos consolidados com base no filtro atual de loja, tipo, setor, motivo e mes.</div>
+</div>
+</div>
+<div class="rank-list" id="productRanking"><div class="empty">Sem dados</div></div>
+</div>
+</div>
+
+<div id="classif" class="tab">
+<div class="split">
+<div class="panel">
+<div class="panel-head">
+<div>
+<h3>Classificação por item</h3>
+<div class="muted-note">Selecione uma nota e aplique motivos em lote ou item a item.</div>
+</div>
+</div>
+<div class="toolbar">
+<select id="noteStoreFilter"><option value="TODAS">Todas as lojas</option></select>
+<select id="noteMonthFilter"><option value="TODOS">Todos os meses</option></select>
+<select id="noteSelect"><option value="">Selecione uma nota</option></select>
+<select id="applyAll"><option value="">Aplicar para todos</option></select>
+<button id="applyAllBtn">Aplicar</button>
+<select id="applySelected"><option value="">Aplicar para selecionados</option></select>
+<button id="applySelectedBtn">Selecionados</button>
+</div>
+<div class="table-wrap"><table><thead><tr><th><input type="checkbox" id="selectAll"></th><th>Produto</th><th>Qtd</th><th>Valor</th><th>Motivo</th></tr></thead><tbody id="classBody"><tr><td colspan="5"><div class="empty">Selecione uma nota</div></td></tr></tbody></table></div>
+</div>
+<div class="panel">
+<div class="panel-head">
+<div>
+<h3>Resumo da nota</h3>
+<div class="muted-note">Detalhes rápidos para revisar antes da classificação.</div>
+</div>
+</div>
+<div class="mini" id="noteSummary"><div class="empty">Sem nota selecionada</div></div>
+</div>
+</div>
+</div>
+
+<div id="items" class="tab">
+<div class="panel">
+<div class="panel-head">
+<div>
+<h3>Itens detalhados</h3>
+<div class="muted-note">Lista completa dos itens importados de acordo com os filtros atuais.</div>
+</div>
+</div>
+<div class="toolbar">
+<input type="search" id="productSearch" placeholder="Pesquisar produto">
+</div>
+<div id="productSummary"><div class="empty">Pesquise um produto para ver resumo por período, notas e motivos.</div></div>
+<div class="table-wrap"><table><thead><tr><th>Emissão</th><th>Competência</th><th>Loja</th><th>Tipo</th><th>Setor</th><th>Nota</th><th>Produto</th><th>Qtd</th><th>Valor</th><th>Motivo</th></tr></thead><tbody id="itemsBody"><tr><td colspan="10"><div class="empty">Sem dados</div></td></tr></tbody></table></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+const REASONS=["Vencimento","Avaria","Quebra","Corte","Lavagem","Manipulação","Furto","Uso/Consumo","Perdas Pagas","Saída de um para outro","Degustação","Outros"];
+const STORAGE_KEY="gestao_perdas_html_v1";
+const SUPABASE_SETTINGS_KEY="gestao_perdas_supabase_config_v1";
+const SUPABASE_TABLE="dashboard_snapshots";
+const SUPABASE_SNAPSHOT_ID="gestao-perdas-principal";
+const DEFAULT_SUPABASE_URL="https://khevuaohphrwhjasmbsy.supabase.co";
+const DEFAULT_SUPABASE_KEY="sb_publishable_dof_x7F6Xt7zzLB-N0uf9Q_hm4STzvR";
+const SECTOR_OPTIONS=["Açougue","FLV","Padaria","Produção Padaria","Bebidas","Furto","Perdas Pagas","Saída de um para outro","Loja/Depósito","Frios e Congelados","Mercearia","Hortifruti","Administrativo","Frente de Caixa","Fatiacao","Não classificado"];
+const REASON_COLORS={"Vencimento":"#0f766e","Avaria":"#dc2626","Quebra":"#f97316","Corte":"#7c3aed","Lavagem":"#06b6d4","Manipulação":"#16a34a","Furto":"#b91c1c","Outros":"#f59e0b","Sem motivo":"#94a3b8"};
+const DEMO_XMLS=[
+'<?xml version="1.0" encoding="UTF-8"?><nfeProc xmlns="http://www.portalfiscal.inf.br/nfe"><NFe><infNFe><ide><natOp>PERDAS ACOUGUE</natOp><nNF>5426</nNF><dhEmi>2026-03-09T14:00:00-04:00</dhEmi></ide><emit><xFant>SUPERMERCADO SOL 7</xFant><enderEmit><xMun>DOURADOS</xMun></enderEmit></emit><det><prod><xProd>ALCATRA</xProd><qCom>25.41</qCom><vUnCom>45.89</vUnCom><vProd>1166.12</vProd></prod></det><det><prod><xProd>MIOLO ACEM</xProd><qCom>79.46</qCom><vUnCom>31.55</vUnCom><vProd>2507.22</vProd></prod></det><det><prod><xProd>CONTRA FILE</xProd><qCom>28.49</qCom><vUnCom>50.05</vUnCom><vProd>1426.15</vProd></prod></det></infNFe></NFe></nfeProc>',
+'<?xml version="1.0" encoding="UTF-8"?><nfeProc xmlns="http://www.portalfiscal.inf.br/nfe"><NFe><infNFe><ide><natOp>MATERIAL USO E CONSUMO ACOUGUE</natOp><nNF>13594</nNF><dhEmi>2026-02-12T10:02:00-04:00</dhEmi></ide><emit><xFant>SUPERMERCADO SOL 3</xFant><enderEmit><xMun>PONTA PORA</xMun></enderEmit></emit><det><prod><xProd>ABSORVENTE CARNE</xProd><qCom>1</qCom><vUnCom>243.50</vUnCom><vProd>243.50</vProd></prod></det><det><prod><xProd>BOB PICO 40X60</xProd><qCom>2</qCom><vUnCom>267.84</vUnCom><vProd>535.69</vProd></prod></det></infNFe></NFe></nfeProc>'
+];
+let allItems=[], notes=[], filtered=[];
+let monthChart,typeChart;
+let supabaseClient=null;
+let supabaseConfigCache='';
+let supabaseChannel=null;
+let lastSnapshotSignature='';
+function brl(v){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0))}
+function num(v){return new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(Number(v||0))}
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function setStatusMessage(message,isOk){const status=document.getElementById('status'); status.textContent=message; status.classList.toggle('ok',!!isOk)}
+function getText(parent,tag){const n=parent.getElementsByTagNameNS('*',tag);return n&&n[0]?n[0].textContent.trim():''}
+function safeStore(name){return name?name.replace(/SUPERMERCADO\s*/i,'').trim():'Loja não identificada'}
+function monthKey(dateStr){if(!dateStr)return 'Sem data'; const d=new Date(dateStr); if(isNaN(d)) return 'Sem data'; return d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toLowerCase()+'/'+d.getFullYear()}
+function competenceKey(dateStr){if(!dateStr)return 'Sem data'; const d=new Date(dateStr); if(isNaN(d)) return 'Sem data'; const c=new Date(d); c.setMonth(c.getMonth()-1); return c.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toLowerCase()+'/'+c.getFullYear()}
+function classifyType(op){op=(op||'').toUpperCase(); if(op.includes('USO')||op.includes('CONSUMO')) return 'Uso/Consumo'; if(op.includes('SAIDA')||op.includes('SAÍDA')) return 'Saída entre lojas'; if(op.includes('PERDA')) return 'Perdas'; return 'Outros'}
+function detailType(type,sector){if(type==='Uso/Consumo'&&sector&&sector!=='Não classificado') return `Uso/Consumo ${sector}`; return type}
+function classifySector(op,prod){const t=((op||'')+' '+(prod||'')).toUpperCase(); if(t.includes('ACOUGUE')||t.includes('AÇOUGUE')) return 'Açougue'; if(t.includes('FLV')) return 'FLV'; if(t.includes('PRODUCAO PADARIA')||t.includes('PRODUÇÃO PADARIA')) return 'Produção Padaria'; if(t.includes('PADARIA')) return 'Padaria'; if(t.includes('BEBIDAS')) return 'Bebidas'; if(t.includes('FURTO')) return 'Furto'; if(t.includes('PAGAS')) return 'Perdas Pagas'; if(t.includes('SAIDA DE UM PARA OUTRO')||t.includes('SAÍDA DE UM PARA OUTRO')||t.includes('SAIDA DE UM PRODUTO PARA OUTRO')||t.includes('SAÍDA DE UM PRODUTO PARA OUTRO')) return 'Saída de um para outro'; if(t.includes('FRIOS')||t.includes('CONGELADOS')) return 'Frios e Congelados'; if(t.includes('MERCEARIA')) return 'Mercearia'; if(t.includes('HORTIFRUTI')) return 'Hortifruti'; if(t.includes('ADMINISTRATIVO')) return 'Administrativo'; if(t.includes('FRENTE DE CAIXA')) return 'Frente de Caixa'; if(t.includes('FATIACAO')||t.includes('FATIAÇÃO')) return 'Fatiacao'; if(t.includes('LOJA')||t.includes('DEPOSITO')||t.includes('DEPÓSITO')) return 'Loja/Depósito'; return 'Não classificado'}
+function normalizeReason(reason){return reason==='Uso'||reason==='Consumo'?'Uso/Consumo':(reason||'')}
+function normalizeSectors(){allItems=allItems.map(i=>{if(i.sectorManual) return i; const sector=classifySector(i.operation,i.product); return {...i,sector,displayType:detailType(i.type,sector)}})}
+function getSupabaseSettings(){return {url:document.getElementById('supabaseUrl').value.trim(),key:document.getElementById('supabaseKey').value.trim()}}
+function loadSupabaseSettings(){document.getElementById('supabaseUrl').value=DEFAULT_SUPABASE_URL; document.getElementById('supabaseKey').value=DEFAULT_SUPABASE_KEY; try{const raw=localStorage.getItem(SUPABASE_SETTINGS_KEY); if(!raw)return; const saved=JSON.parse(raw); document.getElementById('supabaseUrl').value=saved.url||DEFAULT_SUPABASE_URL; document.getElementById('supabaseKey').value=saved.key||DEFAULT_SUPABASE_KEY}catch(e){}}
+function saveSupabaseSettings(){const settings=getSupabaseSettings(); localStorage.setItem(SUPABASE_SETTINGS_KEY,JSON.stringify(settings)); if(supabaseClient&&supabaseChannel) supabaseClient.removeChannel(supabaseChannel); supabaseChannel=null; supabaseClient=null; supabaseConfigCache=''; initSupabaseRealtime()}
+function getSupabaseClient(){const settings=getSupabaseSettings(); if(!settings.url||!settings.key||!window.supabase?.createClient)return null; const nextCache=`${settings.url}::${settings.key}`; if(supabaseClient&&supabaseConfigCache===nextCache)return supabaseClient; supabaseClient=window.supabase.createClient(settings.url,settings.key); supabaseConfigCache=nextCache; return supabaseClient}
+function snapshotSignature(items){return JSON.stringify((items||[]).map(i=>[i.id,i.reason,i.selected,i.sector,i.sectorManual,i.value,i.quantity,i.date]))}
+function applyDataset(items){allItems=(items||[]).map(i=>({...i,reason:normalizeReason(i.reason)})); lastSnapshotSignature=snapshotSignature(allItems); normalizeSectors(); rebuild(); applyFilters(); renderAll()}
+function clearLocalDataset(){allItems=[]; lastSnapshotSignature=''; rebuild(); applyFilters(); renderAll()}
+function initSupabaseRealtime(){const client=getSupabaseClient(); if(!client||supabaseChannel)return; supabaseChannel=client.channel(`realtime:${SUPABASE_TABLE}:${SUPABASE_SNAPSHOT_ID}`).on('postgres_changes',{event:'*',schema:'public',table:SUPABASE_TABLE,filter:`id=eq.${SUPABASE_SNAPSHOT_ID}`},payload=>{if(payload.eventType==='DELETE'){if(allItems.length){localStorage.removeItem(STORAGE_KEY); clearLocalDataset(); setStatusMessage('Dados removidos em tempo real pelo Supabase.',true)} return} const remoteItems=payload.new?.payload?.allItems||[]; const remoteSignature=snapshotSignature(remoteItems); if(remoteSignature===lastSnapshotSignature)return; applyDataset(remoteItems); saveStorage(); setStatusMessage(`Dados atualizados em tempo real pelo Supabase em ${new Date(payload.new.updated_at).toLocaleString('pt-BR')}.`,true)}).subscribe(status=>{if(status==='SUBSCRIBED') setStatusMessage(allItems.length?`Tempo real ativo. ${allItems.length} itens em ${notes.length} nota(s).`:'Tempo real do Supabase ativo.',true)})}
+function parseXml(txt,fileName){const parser=new DOMParser(); const xml=parser.parseFromString(txt,'text/xml'); if(xml.querySelector('parsererror')) throw new Error('XML inválido'); const ide=xml.getElementsByTagNameNS('*','ide')[0]||xml; const emit=xml.getElementsByTagNameNS('*','emit')[0]||xml; const op=getText(ide,'natOp')||'SEM OPERAÇÃO'; const inv=getText(ide,'nNF')||'-'; const dt=getText(ide,'dhEmi')||getText(ide,'dEmi')||''; const store=safeStore(getText(emit,'xFant')||getText(emit,'xNome')); const dets=[...xml.getElementsByTagNameNS('*','det')]; const noteKey=fileName+'::'+inv+'::'+store+'::'+dt; return dets.map((det,idx)=>{const prod=det.getElementsByTagNameNS('*','prod')[0]||det; const type=classifyType(op); const sector=classifySector(op,getText(prod,'xProd')); return {id:noteKey+'::'+(idx+1),noteKey,fileName,invoice:inv,store,date:dt,emissionMonth:monthKey(dt),competenceMonth:competenceKey(dt),operation:op,type,displayType:detailType(type,sector),sector,sectorManual:false,product:getText(prod,'xProd')||'Produto',quantity:parseFloat(getText(prod,'qCom')||0),unitValue:parseFloat(getText(prod,'vUnCom')||0),value:parseFloat(getText(prod,'vProd')||0),reason:'',selected:false}})}
+function rebuild(){const m=new Map(); allItems.forEach(i=>{if(!m.has(i.noteKey))m.set(i.noteKey,{key:i.noteKey,invoice:i.invoice,store:i.store,date:i.date,type:i.type,displayType:i.displayType||detailType(i.type,i.sector),sector:i.sector,operation:i.operation,items:[]}); m.get(i.noteKey).items.push(i)}); notes=[...m.values()]}
+function loadStorage(){const raw=localStorage.getItem(STORAGE_KEY); if(!raw)return false; try{applyDataset(JSON.parse(raw).allItems||[]); return true}catch(e){return false}}
+function saveStorage(){localStorage.setItem(STORAGE_KEY, JSON.stringify({allItems}))}
+async function loadSupabaseData(showAlert){const client=getSupabaseClient(); if(!client){if(showAlert) alert('Preencha a URL e a anon key do Supabase.'); return false} const {data,error}=await client.from(SUPABASE_TABLE).select('payload,updated_at').eq('id',SUPABASE_SNAPSHOT_ID).maybeSingle(); if(error){console.error(error); if(showAlert) alert('Nao foi possivel carregar do Supabase. Verifique a tabela e as credenciais.'); return false} if(!data?.payload?.allItems){if(showAlert) alert('Nenhum snapshot encontrado no Supabase.'); return false} applyDataset(data.payload.allItems); saveStorage(); setStatusMessage(`Dados carregados do Supabase. Ultima sincronizacao: ${new Date(data.updated_at).toLocaleString('pt-BR')}.`,true); if(showAlert) alert('Dados carregados do Supabase.'); return true}
+async function saveData(){saveStorage(); const client=getSupabaseClient(); if(!client){setStatusMessage(`Dados salvos no navegador: ${allItems.length} itens em ${notes.length} nota(s). Configure o Supabase para sincronizar online.`,true); alert('Dados salvos no navegador. Configure o Supabase para sincronizacao online.'); return} const payload={allItems}; const {error}=await client.from(SUPABASE_TABLE).upsert({id:SUPABASE_SNAPSHOT_ID,payload,updated_at:new Date().toISOString()}); if(error){console.error(error); setStatusMessage('Falha ao sincronizar com o Supabase. Os dados continuam salvos no navegador.',false); alert('Falha ao sincronizar com o Supabase. Os dados continuam salvos no navegador.'); return} setStatusMessage(`Dados sincronizados com o Supabase: ${allItems.length} itens em ${notes.length} nota(s).`,true); alert('Dados salvos no navegador e sincronizados com o Supabase.')}
+async function clearData(){if(!confirm('Deseja limpar os dados locais e o snapshot online configurado?')) return; localStorage.removeItem(STORAGE_KEY); clearLocalDataset(); const client=getSupabaseClient(); if(!client){setStatusMessage('Dados locais removidos. Nenhuma conexao Supabase configurada.',true); return} const {error}=await client.from(SUPABASE_TABLE).delete().eq('id',SUPABASE_SNAPSHOT_ID); if(error){console.error(error); setStatusMessage('Dados locais removidos, mas o snapshot no Supabase nao foi apagado.',false); alert('Os dados locais foram removidos, mas houve erro ao limpar o Supabase.'); return} setStatusMessage('Dados locais e snapshot do Supabase removidos.',true)}
+function fill(id,arr){const sel=document.getElementById(id); const cur=sel.value; sel.innerHTML=''; arr.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)}); if(arr.includes(cur)) sel.value=cur}
+function buildNoteOptions(){const noteSelect=document.getElementById('noteSelect'); const selected=noteSelect.value; const noteStore=document.getElementById('noteStoreFilter').value; const noteMonth=document.getElementById('noteMonthFilter').value; const basis=document.getElementById('basis').value; const groupsOrder=['Perdas','Uso/Consumo','Saída entre lojas','Outros']; const scopedNotes=notes.filter(n=>{const sample=n.items[0]; const monthValue=basis==='competence'?sample?.competenceMonth:sample?.emissionMonth; if(noteStore!=='TODAS'&&n.store!==noteStore)return false; if(noteMonth!=='TODOS'&&monthValue!==noteMonth)return false; return true}); const stores=[...new Set(scopedNotes.map(n=>n.store))].sort((a,b)=>a.localeCompare(b,'pt-BR')); const html=['<option value="">Selecione uma nota</option>']; stores.forEach(store=>{const storeNotes=scopedNotes.filter(n=>n.store===store); groupsOrder.forEach(type=>{const typeNotes=storeNotes.filter(n=>n.type===type); if(!typeNotes.length)return; html.push(`<optgroup label="${store} - ${type}">`); typeNotes.sort((a,b)=>String(a.invoice).localeCompare(String(b.invoice),'pt-BR',{numeric:true})).forEach(n=>{const sample=n.items[0]; const monthValue=basis==='competence'?sample?.competenceMonth:sample?.emissionMonth; html.push(`<option value="${n.key}">NF ${n.invoice} · ${monthValue||'Sem data'} · ${n.sector} · ${n.displayType||n.type}</option>`)}); html.push('</optgroup>')})}); noteSelect.innerHTML=html.join(''); if(selected && scopedNotes.some(n=>n.key===selected)) noteSelect.value=selected}
+function refreshFilters(){fill('storeFilter',['TODAS',...new Set(allItems.map(i=>i.store))]); fill('typeFilter',['TODOS',...new Set(allItems.map(i=>i.type))]); fill('sectorFilter',['TODOS',...new Set(allItems.map(i=>i.sector))]); fill('reasonFilter',['TODOS','SEM',...REASONS]); const base=document.getElementById('basis').value==='competence'?allItems.map(i=>i.competenceMonth):allItems.map(i=>i.emissionMonth); const months=['TODOS',...new Set(base)]; fill('monthFilter',months); fill('noteStoreFilter',['TODAS',...new Set(notes.map(n=>n.store))]); fill('noteMonthFilter',months); buildNoteOptions(); document.getElementById('applyAll').innerHTML='<option value="">Aplicar para todos</option>'+REASONS.map(r=>`<option>${r}</option>`).join(''); document.getElementById('applySelected').innerHTML='<option value="">Aplicar para selecionados</option>'+REASONS.map(r=>`<option>${r}</option>`).join('')}
+function applyFilters(){allItems=allItems.map(i=>({...i,competenceMonth:competenceKey(i.date)})); const s=document.getElementById('storeFilter').value,t=document.getElementById('typeFilter').value,sec=document.getElementById('sectorFilter').value,r=document.getElementById('reasonFilter').value,b=document.getElementById('basis').value,m=document.getElementById('monthFilter').value; filtered=allItems.filter(i=>{const mv=b==='competence'?i.competenceMonth:i.emissionMonth; if(s!=='TODAS'&&i.store!==s)return false; if(t!=='TODOS'&&i.type!==t)return false; if(sec!=='TODOS'&&i.sector!==sec)return false; if(r==='SEM'&&i.reason)return false; if(r!=='TODOS'&&r!=='SEM'&&i.reason!==r)return false; if(m!=='TODOS'&&mv!==m)return false; return true})}
+function renderDash(){const dashboardItems=filtered.filter(i=>i.type!=='Outros'); const basis=document.getElementById('basis').value; const notesCount=[...new Set(dashboardItems.map(i=>i.noteKey))].length; const total=dashboardItems.reduce((a,b)=>a+b.value,0); const loss=dashboardItems.filter(i=>i.type==='Perdas').reduce((a,b)=>a+b.value,0); const usage=dashboardItems.filter(i=>i.type==='Uso/Consumo').reduce((a,b)=>a+b.value,0); const stores={}; dashboardItems.forEach(i=>stores[i.store]=(stores[i.store]||0)+i.value); const top=Object.entries(stores).sort((a,b)=>b[1]-a[1])[0]; document.getElementById('kpiNotes').textContent=notesCount; document.getElementById('kpiTotal').textContent=brl(total); document.getElementById('kpiLoss').textContent=brl(loss); document.getElementById('kpiUsage').textContent=brl(usage); document.getElementById('kpiStore').textContent=top?top[0]:'-'; const rows=Object.entries(stores).sort((a,b)=>b[1]-a[1]); document.getElementById('storesBody').innerHTML=rows.length?rows.map(([name,val])=>{const arr=dashboardItems.filter(i=>i.store===name); const monthGroups={}; arr.forEach(i=>{const monthKey=basis==='competence'?i.competenceMonth:i.emissionMonth; if(!monthGroups[monthKey]) monthGroups[monthKey]={total:0,loss:0,usage:0,notes:new Set()}; monthGroups[monthKey].total+=i.value; if(i.type==='Perdas') monthGroups[monthKey].loss+=i.value; if(i.type==='Uso/Consumo') monthGroups[monthKey].usage+=i.value; monthGroups[monthKey].notes.add(i.noteKey)}); const monthRows=Object.entries(monthGroups).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([month,data])=>`<div class="store-month-row"><div><strong>${month}</strong><span>${data.notes.size} nota(s)</span></div><strong>${brl(data.total)}</strong><strong>${brl(data.loss)}</strong><strong>${brl(data.usage)}</strong><strong>${data.notes.size}</strong></div>`).join(''); return `<details class="sector-accordion"><summary><div><strong>${name}</strong><div class="sector-meta">${[...new Set(arr.map(i=>i.noteKey))].length} nota(s)</div></div><div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><span>${brl(val)}</span><span class="sector-meta">Perdas ${brl(arr.filter(i=>i.type==='Perdas').reduce((a,b)=>a+b.value,0))}</span><span class="sector-meta">Uso ${brl(arr.filter(i=>i.type==='Uso/Consumo').reduce((a,b)=>a+b.value,0))}</span></div></summary><div class="store-month-grid">${monthRows}</div></details>`}).join(''):'<div class="empty">Sem dados</div>'; const sectors={}; dashboardItems.forEach(i=>{if(!sectors[i.sector]) sectors[i.sector]={total:0,reasons:{}}; sectors[i.sector].total+=i.value; const reason=i.reason||'Sem motivo'; if(!sectors[i.sector].reasons[reason]) sectors[i.sector].reasons[reason]={value:0,items:0,notes:new Set()}; sectors[i.sector].reasons[reason].value+=i.value; sectors[i.sector].reasons[reason].items+=1; sectors[i.sector].reasons[reason].notes.add(i.noteKey)}); const secRows=Object.entries(sectors).sort((a,b)=>b[1].total-a[1].total); document.getElementById('sectorBox').innerHTML=secRows.length?secRows.map(([sector,data])=>{const reasons=Object.entries(data.reasons).sort((a,b)=>b[1].value-a[1].value); return `<details class="sector-accordion"><summary><div><strong>${sector}</strong><div class="sector-meta">${reasons.length} motivo(s)</div></div><span>${brl(data.total)}</span></summary><div class="sector-details">${reasons.map(([reason,info])=>`<div class="sector-reason"><div><strong>${reason}</strong><span>${info.items} item(ns) · ${info.notes.size} nota(s)</span></div><strong>${brl(info.value)}</strong></div>`).join('')}</div></details>`}).join(''):'<div class="empty">Sem dados</div>'; const productMap={}; dashboardItems.forEach(i=>{const key=(i.product||'Produto').trim()||'Produto'; const monthValue=basis==='competence'?i.competenceMonth:i.emissionMonth; if(!productMap[key]) productMap[key]={value:0,quantity:0,items:0,notes:new Set(),reasons:{},stores:{}}; productMap[key].value+=Number(i.value||0); productMap[key].quantity+=Number(i.quantity||0); productMap[key].items+=1; productMap[key].notes.add(i.noteKey); const reason=i.reason||'Sem motivo'; productMap[key].reasons[reason]=(productMap[key].reasons[reason]||0)+Number(i.value||0); if(!productMap[key].stores[i.store]) productMap[key].stores[i.store]={value:0,quantity:0,items:0,notes:new Set(),months:{}}; productMap[key].stores[i.store].value+=Number(i.value||0); productMap[key].stores[i.store].quantity+=Number(i.quantity||0); productMap[key].stores[i.store].items+=1; productMap[key].stores[i.store].notes.add(i.noteKey); if(!productMap[key].stores[i.store].months[monthValue]) productMap[key].stores[i.store].months[monthValue]={value:0,quantity:0,items:0,notes:{}}; productMap[key].stores[i.store].months[monthValue].value+=Number(i.value||0); productMap[key].stores[i.store].months[monthValue].quantity+=Number(i.quantity||0); productMap[key].stores[i.store].months[monthValue].items+=1; if(!productMap[key].stores[i.store].months[monthValue].notes[i.noteKey]) productMap[key].stores[i.store].months[monthValue].notes[i.noteKey]={invoice:i.invoice,value:0,quantity:0,items:0}; productMap[key].stores[i.store].months[monthValue].notes[i.noteKey].value+=Number(i.value||0); productMap[key].stores[i.store].months[monthValue].notes[i.noteKey].quantity+=Number(i.quantity||0); productMap[key].stores[i.store].months[monthValue].notes[i.noteKey].items+=1}); const rankRows=Object.entries(productMap).sort((a,b)=>b[1].value-a[1].value).slice(0,15); document.getElementById('productRanking').innerHTML=rankRows.length?rankRows.map(([product,data],idx)=>{const topReason=Object.entries(data.reasons).sort((a,b)=>b[1]-a[1])[0]; const storeRows=Object.entries(data.stores).sort((a,b)=>b[1].value-a[1].value).map(([store,info])=>{const monthRows=Object.entries(info.months).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([month,monthInfo])=>{const noteRows=Object.values(monthInfo.notes).sort((a,b)=>b.value-a.value).map(note=>`<div class="sector-reason"><div><strong>NF ${note.invoice}</strong><span>${note.items} lancamentos · qtd ${num(note.quantity)}</span></div><strong>${brl(note.value)}</strong></div>`).join(''); return `<details class="sector-accordion"><summary><div><strong>${month}</strong><div class="sector-meta">${monthInfo.items} lancamentos · qtd ${num(monthInfo.quantity)}</div></div><span>${brl(monthInfo.value)}</span></summary><div class="sector-details">${noteRows}</div></details>`}).join(''); return `<details class="sector-accordion"><summary><div><strong>${store}</strong><div class="sector-meta">${info.notes.size} nota(s) · ${info.items} lancamentos · qtd ${num(info.quantity)}</div></div><strong>${brl(info.value)}</strong></summary><div class="sector-details">${monthRows}</div></details>`}).join(''); return `<details class="sector-accordion"><summary><div style="display:flex;align-items:center;gap:12px"><div class="rank-pos">${idx+1}</div><div><strong>${product}</strong><div class="sector-meta">${data.notes.size} nota(s) · ${data.items} lancamentos</div></div></div><div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><span>${brl(data.value)}</span><span class="sector-meta">Qtd ${num(data.quantity)}</span><span class="sector-meta">Motivo ${topReason?topReason[0]:'-'}</span><span class="sector-meta">${total?((data.value/total)*100).toFixed(1).replace('.',',')+'%':'0,0%'}</span></div></summary><div class="sector-details">${storeRows}</div></details>`}).join(''):'<div class="empty">Sem produtos no filtro atual</div>'; renderCharts()}
+function renderCharts(){const chartItems=filtered.filter(i=>i.type!=='Outros'); const focusedSector=document.getElementById('sectorFilter').value!=='TODOS'; if(monthChart) monthChart.destroy(); if(typeChart) typeChart.destroy(); if(focusedSector){const monthMap={}, reasonMap={}; chartItems.forEach(i=>{const key=document.getElementById('basis').value==='competence'?i.competenceMonth:i.emissionMonth; const reason=i.reason||'Sem motivo'; if(!monthMap[key])monthMap[key]={}; monthMap[key][reason]=(monthMap[key][reason]||0)+i.value; reasonMap[reason]=(reasonMap[reason]||0)+i.value}); const reasonLabels=Object.keys(reasonMap).sort((a,b)=>(reasonMap[b]||0)-(reasonMap[a]||0)); monthChart=new Chart(document.getElementById('monthChart'),{type:'bar',data:{labels:Object.keys(monthMap),datasets:reasonLabels.map(reason=>({label:reason,data:Object.keys(monthMap).map(k=>monthMap[k][reason]||0),backgroundColor:REASON_COLORS[reason]||'#64748b',borderRadius:8}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}},interaction:{mode:'index',intersect:false}}}); typeChart=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:reasonLabels,datasets:[{data:reasonLabels.map(reason=>reasonMap[reason]||0),backgroundColor:reasonLabels.map(reason=>REASON_COLORS[reason]||'#64748b')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}}); return} const typeMap={}, monthMap={}; chartItems.forEach(i=>{typeMap[i.type]=(typeMap[i.type]||0)+i.value; const key=document.getElementById('basis').value==='competence'?i.competenceMonth:i.emissionMonth; if(!monthMap[key])monthMap[key]={Perdas:0,'Uso/Consumo':0,'Saída entre lojas':0}; monthMap[key][i.type]=(monthMap[key][i.type]||0)+i.value}); monthChart=new Chart(document.getElementById('monthChart'),{type:'bar',data:{labels:Object.keys(monthMap),datasets:[{label:'Perdas',data:Object.keys(monthMap).map(k=>monthMap[k]['Perdas']||0),backgroundColor:'#0f172a',borderRadius:8},{label:'Uso/Consumo',data:Object.keys(monthMap).map(k=>monthMap[k]['Uso/Consumo']||0),backgroundColor:'#94a3b8',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}}); typeChart=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:Object.keys(typeMap),datasets:[{data:Object.values(typeMap),backgroundColor:['#0f172a','#1d4ed8','#94a3b8']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}})}
+function renderItems(){const query=(document.getElementById('productSearch')?.value||'').trim().toLowerCase(); const itemRows=query?filtered.filter(i=>(i.product||'').toLowerCase().includes(query)):filtered; document.getElementById('itemsBody').innerHTML=itemRows.length?itemRows.map(i=>`<tr><td>${i.date?new Date(i.date).toLocaleDateString('pt-BR'):'-'}</td><td>${i.competenceMonth}</td><td>${i.store}</td><td>${i.type}</td><td>${i.sector}</td><td>${i.invoice}</td><td>${i.product}</td><td>${num(i.quantity)}</td><td>${brl(i.value)}</td><td>${i.reason||'-'}</td></tr>`).join(''):'<tr><td colspan="10"><div class="empty">Nenhum item encontrado</div></td></tr>'; renderProductSummary(itemRows,query)}
+function renderProductSummary(itemRows,query){const box=document.getElementById('productSummary'); if(!query){box.innerHTML='<div class="empty">Pesquise um produto para ver resumo por período, notas e motivos.</div>'; return} if(!itemRows.length){box.innerHTML='<div class="empty">Nenhum produto encontrado para essa busca nos filtros atuais.</div>'; return} const noteCount=[...new Set(itemRows.map(i=>i.noteKey))].length; const storeCount=[...new Set(itemRows.map(i=>i.store))].length; const totalValue=itemRows.reduce((a,b)=>a+b.value,0); const totalQty=itemRows.reduce((a,b)=>a+Number(b.quantity||0),0); const reasons={}; itemRows.forEach(i=>{const key=i.reason||'Sem motivo'; if(!reasons[key]) reasons[key]={value:0,items:0,notes:new Set()}; reasons[key].value+=i.value; reasons[key].items+=1; reasons[key].notes.add(i.noteKey)}); const reasonRows=Object.entries(reasons).sort((a,b)=>b[1].value-a[1].value); box.innerHTML=`<div class="summary-grid"><div class="summary-card"><div class="label">Busca</div><strong>${query}</strong></div><div class="summary-card"><div class="label">Notas no período</div><strong>${noteCount}</strong></div><div class="summary-card"><div class="label">Quantidade total</div><strong>${num(totalQty)}</strong></div><div class="summary-card"><div class="label">Valor total</div><strong>${brl(totalValue)}</strong></div></div><div class="summary-grid"><div class="summary-card"><div class="label">Itens encontrados</div><strong>${itemRows.length}</strong></div><div class="summary-card"><div class="label">Lojas</div><strong>${storeCount}</strong></div><div class="summary-card"><div class="label">Primeiro período</div><strong>${itemRows[0]?.competenceMonth||'-'}</strong></div><div class="summary-card"><div class="label">Motivos</div><strong>${reasonRows.length}</strong></div></div><div class="reason-list">${reasonRows.map(([reason,info])=>`<div class="reason-chip"><div><strong>${reason}</strong><div class="hint">${info.items} item(ns) · ${info.notes.size} nota(s)</div></div><strong>${brl(info.value)}</strong></div>`).join('')}</div>`}
+function renderClass(){const key=document.getElementById('noteSelect').value; const note=notes.find(n=>n.key===key); const selectAll=document.getElementById('selectAll'); if(!note){document.getElementById('classBody').innerHTML='<tr><td colspan="5"><div class="empty">Selecione uma nota</div></td></tr>'; document.getElementById('noteSummary').innerHTML='<div class="empty">Sem nota selecionada</div>'; selectAll.checked=false; return} document.getElementById('classBody').innerHTML=note.items.map(i=>`<tr><td><input type="checkbox" ${i.selected?'checked':''} onchange="toggleSel('${i.id}',this.checked)"></td><td>${i.product}</td><td>${num(i.quantity)}</td><td>${brl(i.value)}</td><td><select onchange="setReason('${i.id}',this.value)"><option value="">Selecionar</option>${REASONS.map(r=>`<option value="${r}" ${i.reason===r?'selected':''}>${r}</option>`).join('')}</select></td></tr>`).join(''); selectAll.checked=note.items.length>0&&note.items.every(i=>i.selected); const pending=note.items.filter(i=>!i.reason).length; document.getElementById('noteSummary').innerHTML=`<div class="mini-item"><strong>Loja</strong><span>${note.store}</span></div><div class="mini-item"><strong>Nota</strong><span>${note.invoice}</span></div><div class="mini-item"><strong>Tipo</strong><span>${note.displayType||note.type}</span></div><div class="mini-item editor"><strong>Setor</strong><div class="inline-edit"><select id="noteSectorEdit">${SECTOR_OPTIONS.map(s=>`<option value="${s}" ${note.sector===s?'selected':''}>${s}</option>`).join('')}</select><button type="button" onclick="updateNoteSector('${note.key}')">Salvar setor</button></div><div class="hint">Use essa edição quando a nota vier sem setor identificado ou com setor incorreto.</div></div><div class="mini-item"><strong>Operação</strong><span>${note.operation||'-'}</span></div><div class="mini-item"><strong>Itens sem motivo</strong><span>${pending}</span></div><div class="mini-item editor"><strong>Ações</strong><div class="inline-edit danger-row"><button type="button" class="danger-btn" onclick="removeNote('${note.key}')">Excluir esta nota</button></div><div class="hint">Remove todos os itens desta NF do painel e do storage salvo quando você clicar em salvar.</div></div>`}
+function toggleSel(id,checked){allItems=allItems.map(i=>i.id===id?{...i,selected:checked}:i); rebuild(); renderClass()}
+function setReason(id,reason){allItems=allItems.map(i=>i.id===id?{...i,reason:normalizeReason(reason)}:i); rebuild(); applyFilters(); renderAll()}
+function updateNoteSector(noteKey){const field=document.getElementById('noteSectorEdit'); if(!field||!noteKey)return; const sector=field.value; allItems=allItems.map(i=>i.noteKey===noteKey?{...i,sector,sectorManual:true,displayType:detailType(i.type,sector)}:i); rebuild(); applyFilters(); renderAll(); document.getElementById('noteSelect').value=noteKey; renderClass()}
+function removeNote(noteKey){if(!noteKey)return; if(!confirm('Deseja excluir esta nota do painel?')) return; allItems=allItems.filter(i=>i.noteKey!==noteKey); rebuild(); applyFilters(); renderAll(); document.getElementById('noteSelect').value=''}
+function applyAllReason(){const key=document.getElementById('noteSelect').value, reason=normalizeReason(document.getElementById('applyAll').value); if(!key||!reason) return alert('Selecione nota e motivo'); allItems=allItems.map(i=>i.noteKey===key?{...i,reason}:i); rebuild(); applyFilters(); renderAll()}
+function applySelectedReason(){const key=document.getElementById('noteSelect').value, reason=normalizeReason(document.getElementById('applySelected').value); if(!key||!reason) return alert('Selecione nota e motivo'); allItems=allItems.map(i=>(i.noteKey===key&&i.selected)?{...i,reason}:i); rebuild(); applyFilters(); renderAll()}
+function exportJson(){if(!allItems.length)return alert('Sem dados'); const blob=new Blob([JSON.stringify({itens:allItems},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gestao_perdas.json'; a.click()}
+function exportCsv(){if(!filtered.length)return alert('Sem dados'); const rows=[['emissao','competencia','loja','tipo','setor','nota','produto','qtd','valor','motivo'],...filtered.map(i=>[i.date,i.competenceMonth,i.store,i.type,i.sector,i.invoice,i.product,i.quantity,i.value,i.reason||''])]; const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gestao_perdas.csv'; a.click()}
+function currentFilterSummary(){const ids=[['Loja','storeFilter'],['Tipo','typeFilter'],['Setor','sectorFilter'],['Motivo','reasonFilter'],['Mes','monthFilter'],['Base','basis']]; return ids.map(([label,id])=>{const el=document.getElementById(id); if(!el) return null; let value=el.value; if(id==='basis') value=value==='competence'?'Competencia':'Emissao'; if(value==='TODAS'||value==='TODOS') return null; if(value==='SEM') value='Sem motivo'; return {label,value}}).filter(Boolean)}
+function buildReportHtml(){const basis=document.getElementById('basis').value; const reportItems=filtered.filter(i=>i.type!=='Outros'); const notesCount=[...new Set(reportItems.map(i=>i.noteKey))].length; const total=reportItems.reduce((a,b)=>a+b.value,0); const losses=reportItems.filter(i=>i.type==='Perdas').reduce((a,b)=>a+b.value,0); const usage=reportItems.filter(i=>i.type==='Uso/Consumo').reduce((a,b)=>a+b.value,0); const stores={}; const sectors={}; const reasons={}; const months={}; const products={}; reportItems.forEach(i=>{stores[i.store]=(stores[i.store]||0)+i.value; sectors[i.sector]=(sectors[i.sector]||0)+i.value; const reason=i.reason||'Sem motivo'; reasons[reason]=(reasons[reason]||0)+i.value; const monthKey=basis==='competence'?i.competenceMonth:i.emissionMonth; if(!months[monthKey]) months[monthKey]={total:0,notes:new Set(),losses:0,usage:0}; months[monthKey].total+=i.value; months[monthKey].notes.add(i.noteKey); if(i.type==='Perdas') months[monthKey].losses+=i.value; if(i.type==='Uso/Consumo') months[monthKey].usage+=i.value; const productKey=(i.product||'Produto').trim()||'Produto'; if(!products[productKey]) products[productKey]={value:0,quantity:0,notes:new Set(),stores:{}}; products[productKey].value+=i.value; products[productKey].quantity+=Number(i.quantity||0); products[productKey].notes.add(i.noteKey); products[productKey].stores[i.store]=(products[productKey].stores[i.store]||0)+i.value}); const topStore=Object.entries(stores).sort((a,b)=>b[1]-a[1])[0]; const topSector=Object.entries(sectors).sort((a,b)=>b[1]-a[1])[0]; const topReason=Object.entries(reasons).sort((a,b)=>b[1]-a[1])[0]; const monthRows=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([month,data])=>`<tr><td>${escapeHtml(month)}</td><td>${data.notes.size}</td><td>${brl(data.losses)}</td><td>${brl(data.usage)}</td><td>${brl(data.total)}</td></tr>`).join(''); const sectorRows=Object.entries(sectors).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([sector,value])=>`<tr><td>${escapeHtml(sector)}</td><td>${brl(value)}</td><td>${total?((value/total)*100).toFixed(1).replace('.',',')+'%':'0,0%'}</td></tr>`).join(''); const reasonRows=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([reason,value])=>`<tr><td>${escapeHtml(reason)}</td><td>${brl(value)}</td><td>${total?((value/total)*100).toFixed(1).replace('.',',')+'%':'0,0%'}</td></tr>`).join(''); const productRows=Object.entries(products).sort((a,b)=>b[1].value-a[1].value).slice(0,15).map(([product,data],idx)=>{const topStoreName=Object.entries(data.stores).sort((a,b)=>b[1]-a[1])[0]; return `<tr><td>${idx+1}</td><td>${escapeHtml(product)}</td><td>${data.notes.size}</td><td>${num(data.quantity)}</td><td>${brl(data.value)}</td><td>${escapeHtml(topStoreName?topStoreName[0]:'-')}</td></tr>`}).join(''); const filters=currentFilterSummary().map(f=>`<span class="chip"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</span>`).join('')||'<span class="chip">Sem filtros especificos</span>'; const generatedAt=new Date().toLocaleString('pt-BR'); return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatorio Operacional de Perdas</title><style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;color:#122033;background:#eef3f9} .page{width:100%;max-width:190mm;margin:0 auto;background:#fff;box-shadow:0 10px 30px rgba(15,23,42,.08);overflow:hidden} .hero{padding:24px 26px;background:linear-gradient(135deg,#081a3a 0%,#133b73 55%,#e8f0ff 160%);color:#fff} .hero h1{margin:0;font-size:28px;line-height:1.08} .hero p{margin:10px 0 0;color:rgba(255,255,255,.82);font-size:13px;line-height:1.5} .stamp{display:flex;justify-content:space-between;gap:16px;align-items:flex-start} .stamp-box{padding:12px 14px;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:rgba(255,255,255,.08);min-width:165px;text-align:right} .content{padding:20px 26px 28px} .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px} .chip{padding:8px 10px;border-radius:999px;background:#edf4ff;border:1px solid #cfe0ff;font-size:12px;color:#17325c} .section{margin-top:18px;break-inside:avoid} .section h2{margin:0 0 10px;font-size:16px;color:#102546} .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px} .card{padding:14px 16px;border-radius:18px;background:linear-gradient(180deg,#fbfdff 0%,#f4f8ff 100%);border:1px solid #dbe5f3;break-inside:avoid} .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#5b6f90} .card .value{margin-top:8px;font-size:24px;font-weight:800;color:#0f172a} .card .meta{margin-top:8px;font-size:12px;color:#62748f} .split{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start} table{width:100%;border-collapse:collapse;table-layout:fixed} th,td{padding:10px 12px;border-bottom:1px solid #e6ecf5;text-align:left;font-size:12px;vertical-align:top;overflow-wrap:anywhere} th{background:#f5f8fc;color:#46607f;font-weight:700} .table-card{border:1px solid #dbe5f3;border-radius:18px;overflow:hidden;background:#fff;break-inside:avoid} .summary-band{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:12px;margin-top:14px} .highlight{padding:16px;border-radius:20px;background:#0f172a;color:#fff;break-inside:avoid} .highlight .small{font-size:12px;color:rgba(255,255,255,.74)} .highlight strong{display:block;margin-top:6px;font-size:22px} .foot{margin-top:20px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;display:flex;justify-content:space-between;gap:12px} @media print{body{background:#fff}.page{max-width:none;box-shadow:none}.section,.table-card,.card,.highlight{break-inside:avoid;page-break-inside:avoid}} </style></head><body><div class="page"><div class="hero"><div class="stamp"><div><h1>Relatorio Operacional de Perdas</h1><p>Documento executivo gerado a partir do filtro atual do dashboard, pronto para impressao em A4 ou salvamento em PDF.</p></div><div class="stamp-box"><div style="font-size:11px;opacity:.8">Gerado em</div><div style="margin-top:6px;font-weight:700">${escapeHtml(generatedAt)}</div></div></div></div><div class="content"><div class="chips">${filters}</div><div class="grid"><div class="card"><div class="label">Notas</div><div class="value">${notesCount}</div><div class="meta">Quantidade no recorte filtrado</div></div><div class="card"><div class="label">Valor total</div><div class="value">${brl(total)}</div><div class="meta">Soma consolidada do filtro</div></div><div class="card"><div class="label">Perdas</div><div class="value">${brl(losses)}</div><div class="meta">Volume classificado como perdas</div></div><div class="card"><div class="label">Uso/Consumo</div><div class="value">${brl(usage)}</div><div class="meta">Volume de uso interno</div></div></div><div class="summary-band"><div class="highlight"><div class="small">Loja com maior impacto</div><strong>${escapeHtml(topStore?topStore[0]:'-')}</strong><div class="small">${topStore?brl(topStore[1]):'Sem dados'}</div></div><div class="highlight" style="background:#17325c"><div class="small">Setor dominante</div><strong>${escapeHtml(topSector?topSector[0]:'-')}</strong><div class="small">${topSector?brl(topSector[1]):'Sem dados'}</div></div><div class="highlight" style="background:#1e3a8a"><div class="small">Motivo dominante</div><strong>${escapeHtml(topReason?topReason[0]:'-')}</strong><div class="small">${topReason?brl(topReason[1]):'Sem dados'}</div></div></div><div class="section"><h2>Movimentacao por mes</h2><div class="table-card"><table><thead><tr><th>Mes</th><th>Notas</th><th>Perdas</th><th>Uso/Consumo</th><th>Total</th></tr></thead><tbody>${monthRows||'<tr><td colspan="5">Sem dados</td></tr>'}</tbody></table></div></div><div class="section split"><div><h2>Ranking de produtos</h2><div class="table-card"><table><thead><tr><th>#</th><th>Produto</th><th>Notas</th><th>Qtd</th><th>Valor</th><th>Loja lider</th></tr></thead><tbody>${productRows||'<tr><td colspan="6">Sem dados</td></tr>'}</tbody></table></div></div><div><h2>Distribuicao por setor</h2><div class="table-card"><table><thead><tr><th>Setor</th><th>Valor</th><th>Peso</th></tr></thead><tbody>${sectorRows||'<tr><td colspan="3">Sem dados</td></tr>'}</tbody></table></div><div class="section"><h2>Distribuicao por motivo</h2><div class="table-card"><table><thead><tr><th>Motivo</th><th>Valor</th><th>Peso</th></tr></thead><tbody>${reasonRows||'<tr><td colspan="3">Sem dados</td></tr>'}</tbody></table></div></div></div></div><div class="foot"><span>Painel de Perdas · relatorio filtrado</span><span>Use Imprimir > Salvar em PDF para gerar o arquivo final.</span></div></div></div><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));<\/script></body></html>`}
+function openPrintReport(){if(!filtered.length) return alert('Filtre ou carregue dados antes de gerar o relatorio.'); const reportWindow=window.open('about:blank','_blank'); if(!reportWindow) return alert('Nao foi possivel abrir a janela do relatorio.'); reportWindow.document.open(); reportWindow.document.write(buildReportHtml()); reportWindow.document.close(); reportWindow.focus()}
+async function importFiles(files){for(const f of files){const txt=await f.text(); try{allItems=allItems.concat(parseXml(txt,f.name))}catch(e){console.error(e)}} normalizeSectors(); rebuild(); applyFilters(); renderAll()}
+function renderAll(){refreshFilters(); renderDash(); renderItems(); renderClass(); if(!document.getElementById('status').textContent||document.getElementById('status').textContent.includes('Nenhum dado carregado')||document.getElementById('status').textContent.includes(' itens em ')){setStatusMessage(allItems.length?`${allItems.length} itens em ${notes.length} nota(s).`:'Nenhum dado carregado.',false)}}
+document.getElementById('xmlFiles').addEventListener('change', async e=>{if(e.target.files.length) await importFiles([...e.target.files])});
+document.getElementById('demoBtn').addEventListener('click', ()=>{allItems=[]; DEMO_XMLS.forEach((x,idx)=>{allItems=allItems.concat(parseXml(x,'demo_'+(idx+1)+'.xml'))}); allItems=allItems.map((i,idx)=>({...i,reason: idx===0?'Corte': idx===1?'Vencimento':''})); normalizeSectors(); rebuild(); applyFilters(); renderAll()});
+document.getElementById('saveBtn').addEventListener('click', saveData);
+document.getElementById('loadCloudBtn').addEventListener('click', ()=>loadSupabaseData(true));
+document.getElementById('jsonBtn').addEventListener('click', exportJson);
+document.getElementById('csvBtn').addEventListener('click', exportCsv);
+document.getElementById('reportBtn').addEventListener('click', openPrintReport);
+document.getElementById('clearBtn').addEventListener('click', clearData);
+['supabaseUrl','supabaseKey'].forEach(id=>document.getElementById(id).addEventListener('change', saveSupabaseSettings));
+['basis','storeFilter','typeFilter','sectorFilter','reasonFilter','monthFilter'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{applyFilters(); renderAll()}));
+document.getElementById('noteSelect').addEventListener('change', renderClass);
+['noteStoreFilter','noteMonthFilter'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{buildNoteOptions(); renderClass()}));
+document.getElementById('productSearch').addEventListener('input', renderItems);
+document.getElementById('applyAllBtn').addEventListener('click', applyAllReason);
+document.getElementById('applySelectedBtn').addEventListener('click', applySelectedReason);
+document.getElementById('selectAll').addEventListener('change', e=>{const key=document.getElementById('noteSelect').value; if(!key)return; allItems=allItems.map(i=>i.noteKey===key?{...i,selected:e.target.checked}:i); rebuild(); renderClass()});
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click', ()=>{document.querySelectorAll('.tabbtn').forEach(x=>{x.classList.remove('primary');x.classList.remove('active')}); b.classList.add('primary'); b.classList.add('active'); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.getElementById(b.dataset.tab).classList.add('active')}));
+async function initApp(){loadSupabaseSettings(); initSupabaseRealtime(); const loadedRemote=await loadSupabaseData(false); if(!loadedRemote) loadStorage(); normalizeSectors(); rebuild(); applyFilters(); renderAll(); if(!loadedRemote&&allItems.length){setStatusMessage(`Dados carregados do navegador: ${allItems.length} itens em ${notes.length} nota(s).`,true)}}
+initApp();
+</script>
+</body>
+</html>
+
+
