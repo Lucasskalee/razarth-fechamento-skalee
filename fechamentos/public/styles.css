@@ -1303,13 +1303,13 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
 }
 
 .closing-grid-table{
-  min-width:1880px;
+  min-width:1660px;
 }
 
 .closing-grid-head,
 .closing-grid-row{
   display:grid;
-  grid-template-columns:220px repeat(12,minmax(132px,1fr)) 170px;
+  grid-template-columns:190px repeat(12,minmax(112px,1fr)) 150px;
 }
 
 .closing-grid-head{
@@ -1324,8 +1324,8 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
 .closing-total-cell,
 .closing-footer-cell,
 .closing-cell{
-  min-height:116px;
-  padding:14px 12px;
+  min-height:86px;
+  padding:10px 8px;
   border-bottom:1px solid color-mix(in srgb, var(--line) 88%, transparent);
   border-right:1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
@@ -1355,7 +1355,9 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
 .closing-footer-cell{
   display:grid;
   align-content:center;
-  gap:6px;
+  justify-items:center;
+  text-align:center;
+  gap:4px;
 }
 
 .closing-sector-cell strong,
@@ -1373,9 +1375,10 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
 .closing-cell{
   display:grid;
   align-content:center;
-  gap:8px;
-  min-height:116px;
-  text-align:left;
+  justify-items:center;
+  gap:5px;
+  min-height:86px;
+  text-align:center;
   background:linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
   border:none;
   border-right:1px solid color-mix(in srgb, var(--line) 78%, transparent);
@@ -1392,7 +1395,13 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
 
 .closing-cell span{
   color:var(--text-soft);
-  font-size:12px;
+  font-size:11px;
+}
+
+.closing-cell .status-badge{
+  padding:3px 7px;
+  font-size:10px;
+  letter-spacing:.03em;
 }
 
 .closing-cell:hover{

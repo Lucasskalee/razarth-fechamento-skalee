@@ -35,6 +35,14 @@
       "destination": "/public/index.html"
     },
     {
+      "source": "/fechamento",
+      "destination": "/public/fechamento.html"
+    },
+    {
+      "source": "/fechamento/",
+      "destination": "/public/fechamento.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/public/$1"
     }
