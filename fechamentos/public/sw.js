@@ -1,4 +1,4 @@
-const CACHE_NAME = "razarth-cache-v10";
+const CACHE_NAME = "razarth-cache-v11";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const APP_ASSETS = [
   "./js/services/classificacao.js",
   "./js/services/importacao.js",
   "./js/services/realtime.js",
+  "./js/services/auth.js",
   "./js/services/fechamento.js",
   "./js/config/supabase.js",
   "./icons/icon.svg",

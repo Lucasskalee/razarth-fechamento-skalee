@@ -5,6 +5,7 @@ import { exportCsv, openPrintReport, renderClassification, renderDashboard, rend
 import { subscribeRealtime } from "./services/realtime.js";
 import { initUi, touchLastSync } from "./services/ui.js";
 import { searchNf as searchNfService, loadNfItems } from "./services/notas.js";
+import { ensureAuthenticated } from "./services/auth.js";
 
 const refs = {
   basis: document.getElementById("basis"),
@@ -1339,6 +1340,12 @@ function bindEvents() {
 }
 
 async function init() {
+  await ensureAuthenticated({
+    connectionBadge: refs.connectionBadge,
+    lastSyncLabel: refs.lastSyncLabel,
+    pageLabel: "dashboard"
+  });
+
   state.uiCleanup = initUi(refs);
   state.nfModule.entries = readNfEntries();
   renderReview();

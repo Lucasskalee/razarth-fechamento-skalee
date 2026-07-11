@@ -15,6 +15,7 @@ import {
   saveItemReasons,
   saveNoteAudit
 } from "./services/fechamento.js?v=20260511-3";
+import { ensureAuthenticated } from "./services/auth.js";
 
 const refs = {
   storeFilter: document.getElementById("storeFilter"),
@@ -2017,6 +2018,12 @@ function bindEvents() {
 }
 
 async function init() {
+  await ensureAuthenticated({
+    connectionBadge: refs.connectionBadge,
+    lastSyncLabel: refs.lastSyncLabel,
+    pageLabel: "fechamento mensal"
+  });
+
   refreshClock();
   window.setInterval(refreshClock, 1000);
   bindEvents();

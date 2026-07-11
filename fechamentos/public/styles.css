@@ -1040,6 +1040,54 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
   box-shadow:var(--shadow-lg);
 }
 
+.auth-modal-shell{
+  z-index:120;
+}
+
+.auth-modal-card{
+  width:min(460px, 100%);
+  max-height:none;
+}
+
+.auth-head{
+  margin-bottom:12px;
+}
+
+.auth-form{
+  display:grid;
+  gap:12px;
+}
+
+.auth-actions{
+  display:flex;
+  justify-content:flex-end;
+}
+
+.sidebar-auth-user{
+  margin-top:10px;
+  color:rgba(202,218,245,.86);
+  font-size:12px;
+  line-height:1.35;
+  word-break:break-word;
+}
+
+.sidebar-logout-btn{
+  margin-top:10px;
+  width:100%;
+  min-height:36px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+}
+
+.sidebar-logout-btn:hover{
+  border-color:rgba(255,255,255,.35);
+  background:rgba(255,255,255,.14);
+}
+
 .modal-head{
   display:flex;
   justify-content:space-between;
