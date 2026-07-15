@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <!-- SDK -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    
+    <!-- Versioning -->
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <InformationalVersion>0.1.0</InformationalVersion>
+    
+    <!-- Metadata -->
+    <Company>Razarth</Company>
+    <Product>Razarth Platform</Product>
+    <Authors>Razarth Team</Authors>
+    <Description>Razarth Platform - Modular Multi-tenant SaaS</Description>
+    <RepositoryUrl>https://github.com/Lucasskalee/razarth-fechamento-skalee</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!-- Build -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <DebugType>embedded</DebugType>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Analyzers -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>
