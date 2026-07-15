@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Razarth.Core.Application</AssemblyName>
+    <RootNamespace>Razarth.Core.Application</RootNamespace>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Razarth.Core.Domain.csproj" />
+    <ProjectReference Include="..\Razarth.Core.Shared\Razarth.Core.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

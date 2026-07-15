@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Razarth.Core.Infrastructure</AssemblyName>
+    <RootNamespace>Razarth.Core.Infrastructure</RootNamespace>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Razarth.Core.Domain.csproj" />
+    <ProjectReference Include="Razarth.Core.Application.csproj" />
+    <ProjectReference Include="..\Razarth.Core.Shared\Razarth.Core.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
