@@ -1,53 +1,93 @@
-# PRODUCT VISION — Razarth Intelligence Platform
+# PRODUCT VISION v2.0 — Razarth Platform
 
-> **"Primeiro construímos o cérebro. Depois damos olhos, voz e gráficos a ele."**
+> **Strategic Pivot: From "Analytics for Supermarkets" to "Multi-tenant SaaS Platform for Small Business Online Presence"**
 
 ---
 
-## Missão
+## O Que Mudou
 
-Transformar dados operacionais de supermercados em inteligência estratégica que reduz perdas,
-elimina desperdícios e acelera decisões — de forma automática, contínua e auditável.
+### Antes (Razarth Intelligence)
+- Foco: ERP + Analytics especializado em supermercados
+- Mercado: Apenas varejo alimentar
+- Modelo: Um cliente por deploy
+- Complexidade: Alta (múltiplas engines)
+- MVP: Analytics + Dashboard + IA
+
+### Agora (Razarth Platform v2.0)
+- Foco: **Plataforma SaaS multi-tenant** onde qualquer empresa pequena/média pode ter presença online
+- Mercado: Barbearias, restaurantes, estúdios, clínicas, academias, lojas, serviços
+- Modelo: Múltiplas empresas no mesmo banco (tenant)
+- Complexidade: Começar simples, expandir com módulos
+- MVP: Cadastro → Empresa → Página pública → Catálogo → WhatsApp
+
+---
+
+## Missão (Revisada)
+
+Criar uma plataforma acessível onde qualquer pequeno negócio consegue:
+1. Se cadastrar em 2 minutos
+2. Criar sua empresa/marca
+3. Ter página online com produtos/serviços
+4. Receber pedidos/contatos via WhatsApp
+
+Sem precisar de programador, sem precisar pagar caro, sem precisar de infraestrutura.
 
 ---
 
 ## Visão
 
-Ser a plataforma de inteligência operacional de referência para o varejo alimentar brasileiro,
-tornando a análise de dados acessível a gestores de qualquer nível técnico e transformando
-cada fechamento mensal em uma fonte de aprendizado institucional.
+Ser a plataforma de entrada para PMEs brasileiras irem online.
+
+Quando crescerem, adicionam módulos de IA, agendamento, delivery, analytics.
 
 ---
 
-## Propósito
+## Públicos-Alvo (Novo)
 
-Hoje, supermercados registram. O Razarth explica.
+### v1 MVP
+- Barbearias
+- Estúdios de beleza (cílios, unhas)
+- Restaurantes simples
+- Lojas de varejo pequenas
+- Consultórios (advogados, psicólogos)
+- Prestadores de serviço
 
-Todo gestor sabe *quanto* perdeu. Poucos sabem *por quê*, *desde quando*, *em qual tendência*
-e *o que fazer a respeito*. Menos ainda conseguem comparar esse resultado com outras lojas,
-com o histórico da empresa ou com o mesmo período do ano anterior — sem horas de planilha.
-
-O Razarth existe para fechar essa lacuna. Não com dashboards de números, mas com inteligência
-que orienta ação e preserva o conhecimento da empresa para sempre.
+### Depois (v1.5+)
+- Academias
+- Clínicas
+- Supermercados (com Analytics module)
+- Agências
 
 ---
 
-## Público-alvo
+## Razarth Platform Não É
 
-### Usuário primário
-- Coordenadores e gerentes de operações de redes de supermercados.
-- Responsáveis pelo fechamento mensal de perdas e uso/consumo.
-- Analistas financeiros e de controladoria do varejo.
+❌ ERP completo  
+❌ Solução empresarial complexa  
+❌ Concorrente de Shopify/WooCommerce  
+❌ Tudo para todo mundo  
 
-### Usuário secundário
-- Diretores e donos de redes pequenas e médias.
-- Auditores internos e externos.
-- Consultores de operações de varejo.
+---
 
-### Usuário avançado (Razarth Desktop)
-- Administradores do sistema.
-- Responsáveis por importações em massa (XML, Excel, CSV).
-- Equipes de TI e auditoria técnica.
+## Razarth Platform É
+
+✅ Ponto de entrada para PMEs online  
+✅ Escalável: começa simples, fica complexo  
+✅ Modular: cada negócio usa o que precisa  
+✅ Brasileiro: pensado para realidade local  
+
+---
+
+## O Objetivo Real
+
+Você não está construindo um ERP.
+
+Você está construindo **uma casa** onde cada PME coloca seus móveis (módulos).
+
+A plataforma é a fundação que todas compartilham.
+
+Cada um customiza seu espaço.
+
 
 ### Perfil operacional atual (Skalee Sol)
 - Rede com múltiplas lojas: SOL 1, SOL 2, SOL 3, SOL 4, SOL 6 CD, SOL 7.

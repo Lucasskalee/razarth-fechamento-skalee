@@ -1,10 +1,10 @@
 # Razarth Platform
 
-> **Plataforma modular para inteligência operacional de negócios.**
+> **Plataforma SaaS modular multi-tenant para inteligência operacional de negócios.**
 
 Começamos com uma visão: resolver o problema real de supermercados (perdas e gestão).  
 Evoluímos para uma estratégia: construir uma plataforma que serve qualquer negócio.  
-Agora: Documentação de qualidade, arquitetura aprovada, pronto para implementação.
+Agora: documentação organizada, governança definida e pronto para execução.
 
 ---
 
@@ -29,10 +29,11 @@ Cada um tem seu próprio módulo. Todos compartilham autenticação, multi-tenâ
 
 ## 📊 Status Atual
 
-- ✅ **Sprint 0 Completo:** Documentação arquitetural (14 docs, ~200 KB)
+- ✅ **Sprint 0 Completo:** Documentação arquitetural
+- ✅ **Governança definida:** standards, RFCs, ADRs, changelog e métricas
 - ✅ **9 Decisões Arquiteturais** documentadas com rastreabilidade
 - ✅ **Roadmap de 4 sprints** definido (6-8 meses)
-- 🚀 **Sprint 1 Próximo:** Fundação da Platform (4-6 semanas)
+- 🚀 **Sprint 1 Próximo:** Fundação da Platform (código executável)
 
 ---
 
@@ -53,6 +54,7 @@ Cada um tem seu próprio módulo. Todos compartilham autenticação, multi-tenâ
 1. `docs/FINAL_APPROVAL_SPRINT_0.md` — Status geral
 2. `docs/CORE_ARCHITECTURE.md` — Design geral
 3. `docs/MODULE_SYSTEM.md` — Extensibilidade
+4. `docs/07-STANDARDS/NON_FUNCTIONAL_REQUIREMENTS.md` — Limites do sistema
 
 ---
 
@@ -81,6 +83,36 @@ Razarth Platform
 ```
 
 **Regra de ouro:** Cada módulo é independente. Core não muda para satisfazer 1 módulo.
+
+---
+
+## 🧭 Governança
+
+```text
+docs/
+├── 00-VISION/
+├── 01-ARCHITECTURE/
+├── 02-DOMAIN/
+├── 03-ENGINES/
+├── 04-RFC/
+├── 05-ADR/
+├── 06-ROADMAP/
+├── 07-STANDARDS/
+├── 08-DECISIONS/
+└── 09-CHANGELOG/
+```
+
+### Padrão de uso
+- **VISION:** por que existimos
+- **ARCHITECTURE:** como construímos
+- **DOMAIN:** linguagem do negócio
+- **ENGINES:** regras analíticas
+- **RFC:** propostas que ainda serão debatidas
+- **ADR:** decisões fechadas
+- **ROADMAP:** sequência de entrega
+- **STANDARDS:** métricas, NFRs, convenções
+- **DECISIONS:** registro operacional do que foi aprovado
+- **CHANGELOG:** histórico do que entrou
 
 ---
 

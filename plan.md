@@ -1,5 +1,5 @@
 # Razarth Platform — Empresa de Software
-## Fase atual: Documentação completa, iniciando Sprint 1
+## Fase atual: Documentação completa + governança organizada, iniciando Sprint 1
 
 ---
 
@@ -27,24 +27,78 @@ Documentação arquitetural de qualidade.
 - ANALYTICS_ENGINE.md, KNOWLEDGE_ENGINE.md, KPI_CATALOG.md, FORMULA_BOOK.md
 - SPRINT_0_SUMMARY.md
 
-### **Sprint 1** 🚀 Próximo: Foundation
-Construir a casa (Core Platform).
+**Governança adicionada:**
+- `docs/README.md`
+- `docs/04-RFC/README.md`
+- `docs/07-STANDARDS/NON_FUNCTIONAL_REQUIREMENTS.md`
+- `docs/07-STANDARDS/PROJECT_METRICS.md`
+- `docs/08-DECISIONS/README.md`
+- `docs/09-CHANGELOG/README.md`
 
-**Sem UI, sem lógica de negócio. Apenas infraestrutura.**
+### **Sprint 1** 🚀 Foundation (Revisado Sprint 1.2)
 
-Sequência:
-1. Core + Clean Architecture
-2. Multi-tenancy (Company, User, Membership, Roles)
-3. Data Layer (EF Core + Supabase, Soft Delete, Auditoria)
-4. Autenticação (JWT, Refresh Token, RBAC)
-5. Core Services (Config, Upload, Logging, Notifications, Events)
-6. IA Interface (agnóstica, sem implementação)
-7. Module SDK (IModule, Discovery automático)
+**PIVOT CRÍTICO:** Razarth é agora **SaaS multi-tenant para PMEs**, não analytics.
+
+**MVP Congelado (5 Passos):**
+1. Signup (email + senha)
+2. Criar empresa (nome, logo, slug)
+3. Página pública (empresa.razarth.app)
+4. Catálogo de produtos
+5. Botão WhatsApp
+
+#### Sprint 1.1 ✅ Completo
+- Razarth.sln com Clean Architecture (8 projetos)
+- First test (Result<T>)
+- .editorconfig, global.json, Directory.Build.props
+- CI/CD (GitHub Actions)
+
+#### Sprint 1.2 📋 Próximo (3-4 dias)
+- **Banco:** Companies, Users, Memberships, Plans, Subscriptions, Products, AuditLogs
+- **EF Core:** DbContext com novo modelo de domínio
+- **Migrations:** Primeira versão do schema
+- **Seed:** Planos e módulos padrão
+- **Testes:** Integração com database
+
+#### Sprint 1.3 🔐 Multi-Tenancy (2-3 dias)
+- TenantMiddleware (X-Company-Id header)
+- [RequiresCompanyMembership] attribute
+- Row-level security (WHERE company_id = current)
+- Teste de isolamento (UserA não vê UserB)
+
+#### Sprint 1.4 🔑 Autenticação (3-4 dias)
+- JWT + Refresh Token
+- RBAC (owner/editor/viewer)
+- Claims + Policies
+- Logout e token revocation
+
+#### Sprint 1.5 📤 Storage (2-3 dias)
+- Upload de logo
+- Upload de banner
+- Upload de foto de produto
+- Validação (tipo, tamanho)
+
+#### Sprint 1.6 🌐 Página Pública (3-4 dias)
+- Endpoint GET /{slug} (sem auth)
+- Renderizar perfil + catálogo
+- Botão WhatsApp
+- SEO básico (meta tags)
+
+#### Sprint 1.7 🛍️ Catálogo de Produtos (3-4 dias)
+- CRUD de produtos por empresa
+- Upload de foto
+- Preço + descrição
+- Ordenação
+
+#### Sprint 1.8 🧪 Testes & CI Green (3-5 dias)
+- Cobertura > 85%
+- Build < 3 min
+- Testes passando
+- Deploy automático
 8. API Base (Health checks, Versioning)
 9. Testes (>85% coverage)
 
 **Duração:** 4-6 semanas  
-**Resultado:** Plataforma rodando, pronta para módulos
+**Resultado:** Plataforma com arquitetura-base, governança e pronto para módulos
 
 ### **Sprint 2**: Módulo Supermarket
 Primeiro módulo plugável.
