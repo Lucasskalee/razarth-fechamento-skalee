@@ -1,7 +1,8 @@
 # Razarth Platform v2.0 — Complete Documentation Index
 
-**Last Updated:** 2026-07-20  
-**Status:** ✅ **FINAL - READY FOR IMPLEMENTATION**
+**Last Updated:** 2026-07-20 (Session 2 Complete)  
+**Status:** ✅ **FINAL - PLATFORM PHILOSOPHY DEFINED - READY FOR IMPLEMENTATION**  
+**Documents:** 21 (Strategy + Core Domain + Principles + Hypotheses + Philosophy)
 
 ---
 
@@ -48,6 +49,12 @@ This is the complete strategic documentation for **Razarth Platform v2.0**, a mu
 ---
 
 ## 📚 Strategic Documents (Deep Dives)
+
+### ⭐ Platform Philosophy (CRITICAL - Read First!)
+- **18-RAZARTH_MANIFESTO.md** — The Constitution: 7 beliefs that protect architecture + The Five Questions for every feature
+- **21-GOLDEN_RULE.md** — "Every feature must make platform MORE generic, never MORE specific" — The rule that separates Shopify from dead platforms
+- **19-CAPABILITY_MODEL.md** — Evolution from "Modules" to "Capabilities" — Why client doesn't buy modules, buys capabilities
+- **20-MARKETPLACE_EVOLUTION.md** — Ecosystem vision: Phase 1-4, from themes/plugins to partner economy, Year 5 = R$ 100M revenue
 
 ### Product & Vision
 - **07-PRODUCT_VISION_FINAL.md** — Why Razarth is "operational platform for SMB digitalization"
@@ -165,21 +172,54 @@ Why: Proves architecture is generic, not just barbershop-specific
 
 ---
 
-## 📊 Document Status
+## 📊 Complete Document Inventory (21 Documents)
 
-| Document | Pages | Status | Key For |
-|----------|-------|--------|---------|
-| 00-EXECUTIVE_SUMMARY.md | 12 | ✅ Complete | Everyone |
-| 07-PRODUCT_VISION_FINAL.md | 15 | ✅ Complete | PMs, Founders |
-| 08-WORKSPACE_ARCHITECTURE.md | 16 | ✅ Complete | Backend leads |
-| 10-OPERATION_TEMPLATES.md | 18 | ✅ Complete | Strategy, PMs |
-| 09-VALIDATION_REAL_USERS.md | 14 | ✅ Complete | Founders, PMs |
-| 11-VALIDATION_WITH_DIVERSITY.md | 10 | ✅ Complete | QA, PMs |
-| 12-FUTURE_VISION_3YEARS.md | 14 | ✅ Complete | Investors, Team |
-| 04-THREE_LAYER_ARCHITECTURE.md | 15 | ✅ Complete | Architects |
-| 05-BUSINESS_TYPE_CONCEPT.md | 12 | ✅ Complete | Designers, PMs |
-| 06-FINAL_VALUE_PROPOSITION.md | 11 | ✅ Complete | Marketing |
-| **TOTAL** | **137 pages** | ✅ | |
+### Philosophy & Governance (NEW - CRITICAL)
+| # | Document | Purpose | Audience |
+|----|----------|---------|----------|
+| 18 | **RAZARTH_MANIFESTO.md** | Constitution: 7 beliefs + The Five Questions | Everyone |
+| 21 | **GOLDEN_RULE.md** | "Make MORE generic, never MORE specific" — enforcement | Architects, Reviewers |
+| 19 | **CAPABILITY_MODEL.md** | Hierarchy: Workspace → Capability → Template → Company | Technical leads |
+| 20 | **MARKETPLACE_EVOLUTION.md** | 4 phases, 8 categories, R$ 100M Year 5 vision | PMs, Founders |
+
+### Strategic Foundation
+| # | Document | Purpose | Audience |
+|----|----------|---------|----------|
+| 00 | **EXECUTIVE_SUMMARY.md** | Complete overview of v2.0 strategy | Everyone |
+| 07 | **PRODUCT_VISION_FINAL.md** | Razarth = operational platform, 4 pillars | PMs, Founders |
+| 10 | **OPERATION_TEMPLATES.md** | 3 families, 100+ use cases | Strategy, PMs |
+| 17 | **FINAL_STATUS.md** | Scorecard + next steps | Leadership |
+
+### Architecture & Design
+| # | Document | Purpose | Audience |
+|----|----------|---------|----------|
+| 08 | **WORKSPACE_ARCHITECTURE.md** | Workspace as primary entity, DDL, middleware | Backend leads |
+| 04 | **THREE_LAYER_ARCHITECTURE.md** | 3-layer separation + 5-tier module classification | Architects |
+| 05 | **BUSINESS_TYPE_CONCEPT.md** | Templates as initialization packages | Designers, PMs |
+| 02 | **TENANCY_ARCHITECTURE.md** | Multi-tenancy isolation model | Backend leads |
+| 03 | **SPRINT_1_2_DATABASE.md** | Database schema for Sprint 1.2 | Database engineers |
+
+### Core Domain & Principles
+| # | Document | Purpose | Audience |
+|----|----------|---------|----------|
+| 13 | **CORE_DOMAIN.md** | 10 universal attributes (Identity, Participants, Agenda, etc) | Architects, Tech leads |
+| 14 | **PLATFORM_PRINCIPLES.md** | 10 inviolable laws + code review checklist | All developers |
+| 15 | **STRATEGIC_HYPOTHESES.md** | 10 testable hypotheses (H-001 to H-010) | Leadership, PMs |
+| 16 | **SUCCESS_METRIC_60DAYS.md** | Primary metric: account → workspace → page → share | Leadership |
+
+### Validation & Growth
+| # | Document | Purpose | Audience |
+|----|----------|---------|----------|
+| 09 | **VALIDATION_REAL_USERS.md** | Path to validating with 10 real companies | Founders, PMs |
+| 11 | **VALIDATION_WITH_DIVERSITY.md** | Validating across Business + Event + Org | QA, PMs |
+| 12 | **FUTURE_VISION_3YEARS.md** | 3-year growth: ARR, team, international | Investors, Team |
+| 06 | **FINAL_VALUE_PROPOSITION.md** | MVP 1.0 frozen to 6 inviolable features | Marketing, Team |
+
+### Operational
+- **INDEX.md** (this file) — Navigation guide
+- **plan.md** — Master roadmap + next phases
+
+**TOTAL:** 21 Documents, ~300+ KB, professional-grade documentation
 
 ---
 
