@@ -186,6 +186,51 @@ Sistema instala automaticamente:
 Resultado: 2 minutos até página ao vivo
 ```
 
+### Três Famílias de Templates (NEW - Game Changer)
+Razarth não é plataforma para PMEs. É **plataforma de operações digitais**.
+
+```
+Razarth Platform
+
+├── BUSINESS TEMPLATES
+│   └─ Negócios contínuos (Barbearia, Restaurante, Mercado, Clínica, Academia...)
+│
+├── EVENT TEMPLATES (NEW)
+│   └─ Operações com ciclo (Competição, Evento, Curso, Leilão, Campeonato...)
+│
+└── ORGANIZATION TEMPLATES (NEW)
+    └─ Comunidades/Estruturas (Condomínio, Associação, ONG, Igreja, Clube...)
+```
+
+**Por que isso muda tudo:**
+```
+Business Templates:        ~20 segmentos
+Event Templates:           ~50 tipos de operações
+Organization Templates:    ~30 tipos de estrutura
+─────────────────────────
+Total:                     ~100+ casos de uso
+
+SEM reescrever a plataforma = Escalabilidade infinita
+```
+
+**Exemplo:** Competição de arrancada em pista autorizada
+```
+Organizador escolhe: Template "Evento Automotivo"
+
+Sistema instala:
+├─ Página oficial
+├─ Inscrição online
+├─ Lista de pilotos
+├─ Cronograma
+├─ Regulamento (PDF)
+├─ Ranking em tempo real
+├─ Galeria de fotos
+├─ Resultados
+├─ Notificações WhatsApp
+└─ Mapa do local
+
+Resultado: Infraestrutura completa de evento digital
+
 ### Marketplace Interno
 ```
 Empresa A cria um TEMA "Dark Elegante"
@@ -344,21 +389,29 @@ Hoje existem plataformas que fazem ISOLADAMENTE:
 ❌ Analytics
 ```
 
-Razarth faz TUDO INTEGRADO:
+Razarth faz TUDO INTEGRADO para **qualquer operação organizada**:
 ```
-✅ Website
-✅ Agenda
-✅ Delivery
-✅ CRM
-✅ Catálogo
-✅ IA
-✅ Analytics
-✅ Automações
+✅ Barbearia (Business)
+✅ Restaurante (Business)
+✅ Evento/Competição (Event)
+✅ Condomínio (Organization)
+✅ Associação (Organization)
+
+Todos com: Website + Agenda + CRM + Catálogo + IA + Analytics + Automações
 ```
 
-**Proposta de Valor:**
+**Proposta de Valor (REDEFINIDA):**
 ```
-"Transforme sua empresa em um negócio digital em menos de 5 minutos"
+"Transforme QUALQUER operação organizada em um negócio digital em <5 minutos"
+
+NÃO importa se é:
+- Barbearia
+- Evento de arrancada
+- Torneio de eSports
+- Condomínio
+- Curso presencial
+
+Razarth fornece a infraestrutura digital.
 ```
 
 **Por quê?**
@@ -399,12 +452,21 @@ Platform
 ├─ Domain (NEW)
 ├─ DomainRedirect (NEW)
 ├─ Media (NEW)
-├─ Template (NEW)
+├─ Template (NEW) ← Pode ser Business, Event, ou Organization
+├─ TemplateCategory (NEW) ← Classifica template em 3 famílias
 ├─ BusinessType (NEW)
 ├─ Marketplace (NEW)
 ├─ MarketplaceItem (NEW)
 ├─ AuditLog
 └─ Settings
+```
+
+### Template Categories (New Field)
+```
+TemplateCategory (enum):
+├─ BUSINESS     → Negócios contínuos
+├─ EVENT        → Operações com ciclo
+└─ ORGANIZATION → Comunidades/Estruturas
 ```
 
 ---
