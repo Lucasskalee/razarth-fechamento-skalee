@@ -35,16 +35,36 @@ Documentação arquitetural de qualidade.
 - `docs/08-DECISIONS/README.md`
 - `docs/09-CHANGELOG/README.md`
 
-### **Sprint 1** 🚀 Foundation (Revisado Sprint 1.2)
+### **Sprint 1** 🚀 Foundation (Versão Final v2.0)
 
-**PIVOT CRÍTICO:** Razarth é agora **SaaS multi-tenant para PMEs**, não analytics.
+**PIVOT FINAL:** Razarth é **SaaS multi-tenant para PMEs** (não analytics).
 
-**MVP Congelado (5 Passos):**
-1. Signup (email + senha)
-2. Criar empresa (nome, logo, slug)
-3. Página pública (empresa.razarth.app)
-4. Catálogo de produtos
-5. Botão WhatsApp
+**Arquitetura em 3 Camadas:**
+```
+Core Platform (Auth, Companies, Users, Billing, Modules, Domains, Storage)
+Business Modules (Catalog, Scheduling, Delivery, CRM, Inventory, Finance, Marketing, Analytics)
+AI Platform (AI Assistant, Chat, Marketing, Insights, Reports, Automation)
+```
+
+**Proposta de Valor:**
+> "Transforme sua empresa em um negócio digital em menos de 5 minutos."
+
+**Conceito-Chave: BusinessType**
+- Cliente escolhe: Barbearia, Restaurante, Mercado, Clínica, Loja, etc
+- Sistema auto-ativa módulos padrão
+- Zero configuração técnica
+- Cresce com o negócio
+
+**MVP 1.0 Congelado (INEGOCIÁVEL):**
+1. Signup (email + password)
+2. Criar empresa (nome + logo + descrição)
+3. Selecionar BusinessType
+4. Perfil público (3 formatos: empresa.razarth.app, razarth.app/empresa, www.dominio.com.br)
+5. Catálogo (produtos ou serviços)
+6. WhatsApp (botão direto para wa.me/)
+
+**NÃO entra em MVP 1.0:**
+- ❌ Chatbot, IA, Analytics, Delivery, Agenda, Pagamento, Galeria, Email automático
 
 #### Sprint 1.1 ✅ Completo
 - Razarth.sln com Clean Architecture (8 projetos)
