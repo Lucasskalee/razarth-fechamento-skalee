@@ -35,36 +35,53 @@ Documentação arquitetural de qualidade.
 - `docs/08-DECISIONS/README.md`
 - `docs/09-CHANGELOG/README.md`
 
-### **Sprint 1** 🚀 Foundation (Versão Final v2.0)
+### **Sprint 1** 🚀 Foundation (Versão Final v2.0 — REDEFINIDA)
 
-**PIVOT FINAL:** Razarth é **SaaS multi-tenant para PMEs** (não analytics).
+**REPOSICIONAMENTO ESTRATÉGICO:**
+- **De:** Razarth é "Website builder + ERP + Analytics"
+- **Para:** Razarth é "Plataforma operacional para digitalização de PMEs"
 
-**Arquitetura em 3 Camadas:**
+**4 Pilares Invioláveis:**
 ```
-Core Platform (Auth, Companies, Users, Billing, Modules, Domains, Storage)
-Business Modules (Catalog, Scheduling, Delivery, CRM, Inventory, Finance, Marketing, Analytics)
-AI Platform (AI Assistant, Chat, Marketing, Insights, Reports, Automation)
+1. Digital Presence (página, domínio, SEO, galeria, catálogo)
+2. Business Operations (pedidos, agenda, estoque, financeiro, CRM)
+3. Intelligence (IA, chatbot, marketing, relatórios, insights)
+4. Platform (infra invisível: multi-tenancy, billing, storage, auth, audit)
 ```
 
-**Proposta de Valor:**
-> "Transforme sua empresa em um negócio digital em menos de 5 minutos."
+**Mudança de Arquitetura: WORKSPACE**
+```
+ANTES: Platform → Company (centro)
+AGORA: Platform → Workspace → Company[] (múltiplas)
 
-**Conceito-Chave: BusinessType**
+Habilita: Agências (múltiplos clientes), Holdings (múltiplas divisões),
+Franquias (matriz + franqueados), Usuários com múltiplos workspaces.
+SEM necessidade de reescrita futura.
+```
+
+**Conceito-Chave: Template (Evolução de BusinessType)**
 - Cliente escolhe: Barbearia, Restaurante, Mercado, Clínica, Loja, etc
-- Sistema auto-ativa módulos padrão
+- Sistema instala: Módulos + Tema + Dados de exemplo + Workflows
+- Resultado: Ambiente 100% configurado em 2 minutos
 - Zero configuração técnica
-- Cresce com o negócio
 
 **MVP 1.0 Congelado (INEGOCIÁVEL):**
 1. Signup (email + password)
-2. Criar empresa (nome + logo + descrição)
-3. Selecionar BusinessType
-4. Perfil público (3 formatos: empresa.razarth.app, razarth.app/empresa, www.dominio.com.br)
-5. Catálogo (produtos ou serviços)
-6. WhatsApp (botão direto para wa.me/)
+2. Criar workspace
+3. Criar primeira empresa
+4. Selecionar Template (que auto-instala módulos)
+5. Perfil público (3 formatos: empresa.razarth.app, razarth.app/empresa, www.dominio.com.br)
+6. Catálogo (produtos ou serviços)
+7. WhatsApp (botão direto para wa.me/)
+
+**OBJETIVO PRIMÁRIO (NOVO):**
+> "Colocar 10 empresas REAIS usando Razarth com zero intervenção técnica"
+> 
+> Sucesso: 10 diferentes PMEs completam signup → criam perfil → ficam
+> ao vivo → recebem contatos pelo WhatsApp → 70% retêm após 30 dias
 
 **NÃO entra em MVP 1.0:**
-- ❌ Chatbot, IA, Analytics, Delivery, Agenda, Pagamento, Galeria, Email automático
+- ❌ IA/Chatbot, Analytics avançado, Delivery, Agenda, Pagamento
 
 #### Sprint 1.1 ✅ Completo
 - Razarth.sln com Clean Architecture (8 projetos)
@@ -72,12 +89,13 @@ AI Platform (AI Assistant, Chat, Marketing, Insights, Reports, Automation)
 - .editorconfig, global.json, Directory.Build.props
 - CI/CD (GitHub Actions)
 
-#### Sprint 1.2 📋 Próximo (3-4 dias)
-- **Banco:** Companies, Users, Memberships, Plans, Subscriptions, Products, AuditLogs
-- **EF Core:** DbContext com novo modelo de domínio
-- **Migrations:** Primeira versão do schema
-- **Seed:** Planos e módulos padrão
-- **Testes:** Integração com database
+#### Sprint 1.2 📋 Próximo — DATABASE & WORKSPACE (3-4 dias)
+- **Banco:** Workspace, WorkspaceUsers, Companies, Users, Memberships, Plans, Subscriptions, Modules, CompanyModules, Products, Services, AuditLogs
+- **EF Core:** DbContext com modelo Workspace-centrado
+- **Migrations:** Primeira versão do schema com Workspace
+- **Seed:** Planos, módulos, templates, business types
+- **Testes:** Integração com database, isolamento de Workspace
+- **Novo:** Implementar Workspace como entidade primária (Platform → Workspace → Company[])
 
 #### Sprint 1.3 🔐 Multi-Tenancy (2-3 dias)
 - TenantMiddleware (X-Company-Id header)
@@ -114,11 +132,99 @@ AI Platform (AI Assistant, Chat, Marketing, Insights, Reports, Automation)
 - Build < 3 min
 - Testes passando
 - Deploy automático
-8. API Base (Health checks, Versioning)
-9. Testes (>85% coverage)
 
-**Duração:** 4-6 semanas  
-**Resultado:** Plataforma com arquitetura-base, governança e pronto para módulos
+---
+
+## 🎯 Roadmap Release-Based (Produto, não implementação)
+
+Mudança de foco: **Sprints** são internos, **Releases** são o que importa para clientes.
+
+### Release 1.0: Foundation (4-6 weeks)
+- ✅ Multi-tenancy com Workspace
+- ✅ Auth + JWT
+- ✅ Billing & Plans
+- ✅ Storage básico
+- 🎯 Métrica: Deploy com zero bugs críticos
+
+### Release 1.1: Public Profiles (2-3 weeks)
+- ✅ Página pública ao vivo
+- ✅ Logo + Banner + Catálogo
+- ✅ WhatsApp integration
+- ✅ 3 formatos de domínio
+- 🎯 Métrica: Primeira página funcionando
+
+### Release 1.2: Business Templates (2-3 weeks)
+- ✅ 8 templates predefinidos
+- ✅ Auto-instalação de módulos
+- ✅ Theme selection
+- ✅ Sample data
+- 🎯 Métrica: Onboarding < 5 min
+
+### Release 1.3: Scheduling (3-4 weeks)
+- ✅ Agenda
+- ✅ Confirmação automática
+- ✅ Lembretes
+- 🎯 Métrica: 50% das companies usando
+
+### Release 1.4: Commerce (3-4 weeks)
+- ✅ Pedidos + Carrinho
+- ✅ Pagamentos (Pix, Cartão)
+- 🎯 Métrica: Primeira venda real
+
+### Release 2.0: Razarth AI (ongoing)
+- ✅ AI Assistant
+- ✅ Chatbot inteligente
+- ✅ Marketing automation
+- 🎯 Métrica: IA utilizada por 70%+ das companies
+
+### Release 2.5: Marketplace (ongoing)
+- ✅ Publicação de themes
+- ✅ Compra de plugins
+- ✅ Revenue sharing (70% creator, 30% Razarth)
+- 🎯 Métrica: 10+ creators publicando
+
+### Release 3.0: Automation Engine (future)
+- ✅ Workflow builder
+- ✅ Triggers avançados
+- ✅ Integrações externas
+- 🎯 Métrica: Enterprise-grade capabilities
+
+---
+
+## 🎓 Validação com Usuários Reais
+
+### Objetivo Primário (INVIOLÁVEL)
+```
+"Colocar 10 empresas reais usando Razarth"
+
+Sem ajuda técnica
+Completando: Signup → Perfil → Template → Página ao vivo → WhatsApp
+Métrica: 7/10 retêm após 30 dias
+```
+
+### Timeline
+```
+WEEKS 1-6: Release 1.0 + 1.1 (Foundation + Public Profiles)
+WEEKS 7-8: Beta com 10 real companies
+WEEKS 9-10: Pre-launch refinements
+WEEKS 11-12: Validation complete
+```
+
+### Se Validação Confirmar (Cenário Otimista)
+```
+✅ IA deixa de ser "aposta" → passa a ser accelerator
+✅ Analytics deixa de ser "feature legal" → passa a ser diferencial
+✅ Marketplace deixa de ser "ideia" → passa a ser revenue stream
+✅ Você tem permissão para ESCALAR (investimento, hiring, marketing)
+```
+
+### Se Validação NÃO Confirmar (Cenário Pessimista)
+```
+❌ Analyze: Por quê? (usabilidade? performance? feature faltando?)
+❌ Pivot: Corrija e tente novamente com 10 novas empresas
+```
+
+---
 
 ### **Sprint 2**: Módulo Supermarket
 Primeiro módulo plugável.
