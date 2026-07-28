@@ -82,7 +82,11 @@ export function initUi(refs) {
 
   refs.themeToggle?.addEventListener("click", () => {
     const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    applyTheme(nextTheme, refs);
+    if (!document.startViewTransition) {
+      applyTheme(nextTheme, refs);
+      return;
+    }
+    document.startViewTransition(() => applyTheme(nextTheme, refs));
   });
 
   const stopClock = startClock(refs);

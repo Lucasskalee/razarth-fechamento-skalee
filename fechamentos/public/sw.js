@@ -1,4 +1,4 @@
-const CACHE_NAME = "razarth-cache-v11";
+const CACHE_NAME = "razarth-cache-v17";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -19,7 +19,9 @@ const APP_ASSETS = [
   "./js/config/supabase.js",
   "./icons/icon.svg",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/skalee-symbol-login.png",
+  "./icons/skalee-wordmark-login.png"
 ];
 
 self.addEventListener("install", (event) => {

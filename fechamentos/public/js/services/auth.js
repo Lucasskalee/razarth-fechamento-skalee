@@ -17,27 +17,32 @@ function ensureAuthModal(pageLabel = "Painel") {
   modal.id = "authModal";
   modal.className = "modal-shell auth-modal-shell";
   modal.innerHTML = `
-    <div class="modal-card auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-      <div class="modal-head auth-head">
-        <div>
-          <span class="panel-tag">Acesso restrito</span>
-          <h3 id="authTitle">Entrar no Razarth</h3>
-          <p class="muted-note">Use seu usuario do Supabase para abrir o ${escapeHtml(pageLabel)}.</p>
+    <div class="auth-ring-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <i style="--ring-color:#4f7cff;"></i>
+      <i style="--ring-color:#6c5cff;"></i>
+      <i style="--ring-color:#00d4ff;"></i>
+      <form id="authForm" class="auth-ring-form">
+        <div class="auth-brand-mark" aria-hidden="true">
+          <img class="auth-brand-symbol" src="./icons/skalee-symbol-login.png" alt="">
+          <img class="auth-brand-wordmark" src="./icons/skalee-wordmark-login.png" alt="">
         </div>
-      </div>
-      <form id="authForm" class="auth-form">
-        <label class="closing-field">
+        <h3 id="authTitle">Entrar</h3>
+        <p>Bem-vindo de volta. Acesse o ${escapeHtml(pageLabel)} com sua conta operacional.</p>
+        <label class="auth-ring-field">
           <span>Email</span>
           <input id="authEmail" type="email" autocomplete="username" required placeholder="seu.email@empresa.com">
         </label>
-        <label class="closing-field">
+        <label class="auth-ring-field">
           <span>Senha</span>
           <input id="authPassword" type="password" autocomplete="current-password" required placeholder="Digite sua senha">
         </label>
-        <div class="auth-actions">
-          <button id="authSubmitBtn" type="submit">Entrar</button>
+        <button id="authSubmitBtn" class="auth-ring-submit" type="submit">Entrar</button>
+        <div class="auth-ring-links">
+          <a href="#" aria-disabled="true">Esqueci a senha</a>
+          <a href="#" aria-disabled="true">Criar conta</a>
         </div>
-        <div id="authStatus" class="status info">Informe email e senha para continuar.</div>
+        <div id="authStatus" class="auth-ring-status info">Informe email e senha para continuar.</div>
+        <span class="auth-platform-credit">Razarth Platform</span>
       </form>
     </div>
   `;
@@ -49,7 +54,9 @@ function ensureAuthModal(pageLabel = "Painel") {
 function setAuthStatus(type, message) {
   const status = document.getElementById("authStatus");
   if (!status) return;
-  status.className = `status ${type}`;
+  status.className = status.classList.contains("auth-ring-status")
+    ? `auth-ring-status ${type}`
+    : `status ${type}`;
   status.textContent = message;
 }
 
@@ -94,12 +101,26 @@ async function openLoginModal(client, pageLabel) {
   const emailField = document.getElementById("authEmail");
   const passwordField = document.getElementById("authPassword");
   const submitBtn = document.getElementById("authSubmitBtn");
+  const ringCard = modal.querySelector(".auth-ring-card");
 
   if (!form || !emailField || !passwordField || !submitBtn) {
     throw new Error("Nao foi possivel montar o formulario de login.");
   }
 
   emailField.focus();
+  ringCard?.setAttribute("data-auth-focus", "email");
+
+  emailField.addEventListener("focus", () => {
+    ringCard?.setAttribute("data-auth-focus", "email");
+  });
+
+  passwordField.addEventListener("focus", () => {
+    ringCard?.setAttribute("data-auth-focus", "password");
+  });
+
+  modal.querySelectorAll(".auth-ring-links a").forEach((link) => {
+    link.addEventListener("click", (event) => event.preventDefault());
+  });
 
   return new Promise((resolve, reject) => {
     const onSubmit = async (event) => {
@@ -113,6 +134,7 @@ async function openLoginModal(client, pageLabel) {
       }
 
       submitBtn.disabled = true;
+      ringCard?.classList.add("is-authenticating");
       setAuthStatus("info", "Validando credenciais...");
 
       try {
@@ -121,6 +143,10 @@ async function openLoginModal(client, pageLabel) {
         const user = data?.user || null;
         if (!user) throw new Error("Login concluido, mas sem usuario na sessao.");
 
+        ringCard?.classList.add("is-unlocking");
+        setAuthStatus("info", "Acesso liberado. Abrindo plataforma...");
+        await new Promise((done) => setTimeout(done, 420));
+
         form.removeEventListener("submit", onSubmit);
         modal.hidden = true;
         resolve(user);
@@ -128,6 +154,7 @@ async function openLoginModal(client, pageLabel) {
         setAuthStatus("error", error.message || "Nao foi possivel autenticar.");
       } finally {
         submitBtn.disabled = false;
+        ringCard?.classList.remove("is-authenticating");
       }
     };
 

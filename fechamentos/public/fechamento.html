@@ -15,10 +15,17 @@
 </head>
 <body>
   <div class="app-shell fechamento-shell">
-    <aside class="sidebar">
+    <aside class="sidebar vertical-sidebar">
+      <input type="checkbox" role="switch" id="sidebarToggleFechamento" class="sidebar-toggle-input">
       <div class="sidebar-top">
+        <div class="sidebar-toggle-container">
+          <label class="sidebar-toggle" for="sidebarToggleFechamento" aria-label="Alternar menu">
+            <span class="sidebar-toggle-open" aria-hidden="true">☰</span>
+            <span class="sidebar-toggle-close" aria-hidden="true">×</span>
+          </label>
+        </div>
         <div class="brand">
-          <div class="brand-logo" aria-hidden="true">R</div>
+          <div class="brand-logo" aria-hidden="true"><img src="./icons/skalee-symbol-login.png" alt=""></div>
           <div class="brand-copy">
             <span class="brand-kicker">Razarth Control</span>
             <h1>Fechamento Mensal por Setor</h1>
@@ -34,12 +41,14 @@
       </div>
 
       <nav class="side-nav" aria-label="Navegacao do fechamento">
-        <a class="side-link is-active" href="./fechamento.html">
-          <span>Fechamento</span>
+        <a class="side-link is-active" href="./fechamento.html" data-tooltip="Fechamento">
+          <span class="side-icon" aria-hidden="true">F</span>
+          <span class="side-text">Fechamento</span>
           <small>Mensal por setor</small>
         </a>
-        <a class="side-link" href="./index.html">
-          <span>Dashboard</span>
+        <a class="side-link" href="./index.html" data-tooltip="Dashboard">
+          <span class="side-icon" aria-hidden="true">D</span>
+          <span class="side-text">Dashboard</span>
           <small>Voltar ao painel</small>
         </a>
       </nav>
