@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=20260824-2">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -62,8 +62,14 @@
           <span class="side-text">Itens</span>
           <small>Busca detalhada</small>
         </button>
-        <div class="side-nav-group" aria-label="Submenu de fechamento">
-          <span class="side-nav-group-title">Fechamento</span>
+        <div class="side-nav-group mega-nav-group" aria-label="Submenu de fechamento">
+          <button class="mega-nav-trigger" type="button" aria-haspopup="true">
+            <span class="side-icon" aria-hidden="true">F</span>
+            <span class="mega-nav-trigger-copy"><strong>Fechamento</strong><small>4 ferramentas</small></span>
+            <span class="mega-nav-chevron" aria-hidden="true">›</span>
+          </button>
+          <div class="mega-nav-panel">
+          <span class="mega-nav-kicker">Operação mensal</span>
           <a class="side-link side-link-sub side-link-shortcut" href="./fechamento.html" data-tooltip="Mensal por setor">
             <span class="side-icon" aria-hidden="true">M</span>
             <span class="side-text">Mensal por setor</span>
@@ -84,6 +90,7 @@
             <span class="side-text">Historico</span>
             <small>Trilha de lancamentos</small>
           </button>
+          </div>
         </div>
       </nav>
 
@@ -714,6 +721,8 @@
     </div>
   </div>
 
-  <script type="module" src="./js/main.js?v=20260619-3"></script>
+  <a class="dashboard-ai-button" href="./fechamento.html#aiAnalysisBlock" aria-label="Abrir analise do fechamento com inteligencia artificial">Analise com IA</a>
+
+  <script type="module" src="./js/main.js?v=20260824-1"></script>
 </body>
 </html>

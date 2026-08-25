@@ -15,7 +15,8 @@ import {
   saveItemReasons,
   saveNoteAudit
 } from "./services/fechamento.js?v=20260511-3";
-import { ensureAuthenticated } from "./services/auth.js";
+import { ensureAuthenticated } from "./services/auth.js?v=20260820-1";
+import { requestClosingAnalysis, requestClosingChat } from "./services/analiseIa.js?v=20260820-2";
 
 const refs = {
   storeFilter: document.getElementById("storeFilter"),
@@ -51,6 +52,15 @@ const refs = {
   managerTypeFilter: document.getElementById("managerTypeFilter"),
   managerReasonFilter: document.getElementById("managerReasonFilter"),
   managerStatus: document.getElementById("managerStatus"),
+  aiAnalyzeBtn: document.getElementById("aiAnalyzeBtn"),
+  aiAnalysisBlock: document.getElementById("aiAnalysisBlock"),
+  aiAnalysisResult: document.getElementById("aiAnalysisResult"),
+  aiChatForm: document.getElementById("aiChatForm"),
+  aiChatInput: document.getElementById("aiChatInput"),
+  aiChatSendBtn: document.getElementById("aiChatSendBtn"),
+  aiChatClearBtn: document.getElementById("aiChatClearBtn"),
+  aiChatMessages: document.getElementById("aiChatMessages"),
+  aiChatContext: document.getElementById("aiChatContext"),
   managerCards: document.getElementById("managerCards"),
   storeComparisonChart: document.getElementById("storeComparisonChart"),
   monthlyEvolutionChart: document.getElementById("monthlyEvolutionChart"),
@@ -108,6 +118,10 @@ const state = {
     selectedKey: "",
     loading: false,
     error: "",
+    aiLoading: false,
+    aiResult: null,
+    chatLoading: false,
+    chatMessages: [],
     filters: {
       month: "TODOS",
       year: new Date().getFullYear(),
@@ -1050,6 +1064,151 @@ function renderDiagnosis(model) {
   `;
 }
 
+function buildAiPayload(model) {
+  return {
+    periodo: monthLabel(model.currentPeriod.year, model.currentPeriod.month),
+    filtros: { ...state.manager.filters },
+    indicadores: {
+      perda_total: model.currentTotal,
+      perda_mes_anterior: model.previousTotal,
+      variacao_valor: model.totalVariation,
+      variacao_percentual: model.pctVariation,
+      itens_analisados: model.currentItems.length
+    },
+    lojas: model.stores.slice(0, 10).map(({ store, value, quantity, items }) => ({ store, value, quantity, items })),
+    setores: model.sectors.slice(0, 10).map(({ sector, value, quantity, items }) => ({ sector, value, quantity, items })),
+    produtos: state.manager.rows.slice(0, 12).map((row) => ({
+      produto: row.product,
+      loja: row.store,
+      setor: row.sector,
+      valor_atual: row.currentValue,
+      valor_anterior: row.previousValue,
+      variacao_valor: row.valueVariation,
+      variacao_percentual: row.pctVariation,
+      quantidade_atual: row.currentQuantity,
+      preco_medio_atual: row.currentPrice,
+      motivo_principal: row.mainReason,
+      valor_sem_motivo: row.missingReasonValue
+    }))
+  };
+}
+
+function renderAiAnalysis() {
+  if (!refs.aiAnalysisResult) return;
+  if (state.manager.aiLoading) {
+    refs.aiAnalysisResult.innerHTML = '<div class="fechamento-skeleton-text"></div>';
+    return;
+  }
+  const analysis = state.manager.aiResult;
+  if (!analysis) return;
+  const list = (items, renderItem, emptyText) => items?.length
+    ? `<ul>${items.map(renderItem).join("")}</ul>`
+    : `<p class="muted-note">${escapeHtml(emptyText)}</p>`;
+  refs.aiAnalysisResult.innerHTML = `
+    <div class="ai-analysis-summary">
+      <span class="status-badge ${analysis.nivel_atencao === "critico" || analysis.nivel_atencao === "alto" ? "danger" : (analysis.nivel_atencao === "medio" ? "warning" : "success")}">Atencao ${escapeHtml(analysis.nivel_atencao)}</span>
+      <p>${escapeHtml(analysis.resumo_executivo)}</p>
+    </div>
+    <div class="ai-analysis-grid">
+      <article><h4>Anomalias observadas</h4>${list(analysis.anomalias, (item) => `<li><strong>${escapeHtml(item.titulo)}</strong><span>${escapeHtml(item.evidencia)} ${escapeHtml(item.impacto)}</span></li>`, "Nenhuma anomalia relevante.")}</article>
+      <article><h4>Causas a validar</h4>${list(analysis.causas_provaveis, (item) => `<li><strong>${escapeHtml(item.causa)} (${escapeHtml(item.confianca)})</strong><span>${escapeHtml(item.como_validar)}</span></li>`, "Sem hipoteses suficientes.")}</article>
+      <article><h4>Recomendacoes</h4>${list(analysis.recomendacoes, (item) => `<li><strong>${escapeHtml(item.acao)} - prioridade ${escapeHtml(item.prioridade)}</strong><span>Indicador: ${escapeHtml(item.indicador)}</span></li>`, "Sem recomendacoes adicionais.")}</article>
+      <article><h4>Conferencia humana</h4>${list(analysis.pontos_conferencia, (item) => `<li><span>${escapeHtml(item)}</span></li>`, "Sem pontos adicionais.")}</article>
+    </div>
+    ${analysis.limitacoes?.length ? `<div class="ai-analysis-limitations"><strong>Limitacoes da analise</strong>${list(analysis.limitacoes, (item) => `<li><span>${escapeHtml(item)}</span></li>`, "")}</div>` : ""}
+  `;
+}
+
+function renderAiChat() {
+  if (!refs.aiChatMessages) return;
+  const messages = state.manager.chatMessages;
+  refs.aiChatMessages.innerHTML = messages.length ? messages.map((message) => `
+    <div class="ai-chat-message ${message.role}">
+      <span>${message.role === "user" ? "Voce" : "Assistente"}</span>
+      <p>${escapeHtml(message.content).replace(/\n/g, "<br>")}</p>
+    </div>
+  `).join("") : '<div class="ai-chat-welcome">Pergunte, por exemplo: “Por que as perdas aumentaram neste mes?”</div>';
+  if (state.manager.chatLoading) {
+    refs.aiChatMessages.insertAdjacentHTML("beforeend", '<div class="ai-chat-message assistant is-typing"><span>Assistente</span><p>Analisando o fechamento...</p></div>');
+  }
+  refs.aiChatMessages.scrollTop = refs.aiChatMessages.scrollHeight;
+}
+
+function resetAiChat(message = "") {
+  state.manager.chatMessages = [];
+  state.manager.chatLoading = false;
+  renderAiChat();
+  if (message) showToast("info", message);
+}
+
+async function sendAiChatMessage(event) {
+  event.preventDefault();
+  const question = refs.aiChatInput.value.trim();
+  if (!question || state.manager.chatLoading) return;
+  const model = buildManagerModel();
+  if (!model.currentItems.length) {
+    showToast("warning", "Nao ha perdas no recorte atual para conversar.");
+    return;
+  }
+
+  const history = state.manager.chatMessages.map(({ role, content }) => ({ role, content }));
+  state.manager.chatMessages.push({ role: "user", content: question });
+  state.manager.chatLoading = true;
+  refs.aiChatInput.value = "";
+  refs.aiChatSendBtn.disabled = true;
+  renderAiChat();
+
+  try {
+    const result = await requestClosingChat(buildAiPayload(model), question, history);
+    state.manager.chatMessages.push({ role: "assistant", content: result.answer });
+  } catch (error) {
+    const message = error.userMessage || error.message || "Nao foi possivel obter uma resposta.";
+    state.manager.chatMessages.push({ role: "assistant", content: `Nao consegui responder: ${message}` });
+    showToast("error", message, 6000);
+  } finally {
+    state.manager.chatLoading = false;
+    refs.aiChatSendBtn.disabled = false;
+    refs.aiChatInput.focus();
+    renderAiChat();
+  }
+}
+
+async function analyzeWithAi() {
+  const model = buildManagerModel();
+  if (!model.currentItems.length) {
+    showToast("warning", "Nao ha perdas no recorte atual para analisar.");
+    refs.aiAnalysisBlock?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  refs.aiAnalysisBlock?.scrollIntoView({ behavior: "smooth", block: "start" });
+  state.manager.aiLoading = true;
+  state.manager.aiResult = null;
+  refs.aiAnalyzeBtn.disabled = true;
+  refs.aiAnalyzeBtn.textContent = "Analisando...";
+  renderAiAnalysis();
+  try {
+    const result = await requestClosingAnalysis(buildAiPayload(model));
+    state.manager.aiResult = result.analysis;
+    renderAiAnalysis();
+    showToast("success", "Analise por IA concluida.");
+  } catch (error) {
+    console.error(error);
+    const message = error.userMessage || error.message || "Falha ao gerar analise.";
+    refs.aiAnalysisResult.innerHTML = `
+      <div class="ai-analysis-error" role="alert">
+        <strong>Nao foi possivel concluir a analise</strong>
+        <p>${escapeHtml(message)}</p>
+        <small>Verifique a configuracao da IA e tente novamente.</small>
+      </div>
+    `;
+    showToast("error", message, 6000);
+  } finally {
+    state.manager.aiLoading = false;
+    refs.aiAnalyzeBtn.disabled = false;
+    refs.aiAnalyzeBtn.textContent = "Analisar com IA";
+  }
+}
+
 function renderManager() {
   if (state.manager.loading && !state.manager.items.length) {
     setManagerStatus("info", "Carregando dados gerenciais...");
@@ -1989,6 +2148,9 @@ function bindEvents() {
   ].filter(Boolean).forEach((element) => {
     element.addEventListener("change", () => {
       syncManagerStateFromFilters();
+      state.manager.aiResult = null;
+      resetAiChat();
+      if (refs.aiAnalysisResult) refs.aiAnalysisResult.innerHTML = '<div class="empty">O recorte mudou. Clique em Analisar com IA para gerar uma nova leitura.</div>';
       loadManagerData({ silent: true });
     });
   });
@@ -1997,6 +2159,10 @@ function bindEvents() {
     syncManagerStateFromFilters();
     loadManagerData();
   });
+
+  refs.aiAnalyzeBtn?.addEventListener("click", analyzeWithAi);
+  refs.aiChatForm?.addEventListener("submit", sendAiChatMessage);
+  refs.aiChatClearBtn?.addEventListener("click", () => resetAiChat("Nova conversa iniciada."));
 
   document.getElementById("analiseGerencial")?.addEventListener("click", (event) => {
     const action = event.target.closest("[data-action]");

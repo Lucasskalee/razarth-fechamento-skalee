@@ -64,6 +64,15 @@ function ensureSidebarAuthControls() {
   const panel = document.querySelector(".sidebar-bottom .sidebar-panel");
   if (!panel) return {};
 
+  let avatar = document.getElementById("authUserAvatar");
+  if (!avatar) {
+    avatar = document.createElement("span");
+    avatar.id = "authUserAvatar";
+    avatar.className = "sidebar-auth-avatar";
+    avatar.setAttribute("aria-hidden", "true");
+    panel.appendChild(avatar);
+  }
+
   let userLabel = document.getElementById("authUserLabel");
   if (!userLabel) {
     userLabel = document.createElement("p");
@@ -82,7 +91,7 @@ function ensureSidebarAuthControls() {
     panel.appendChild(logoutBtn);
   }
 
-  return { userLabel, logoutBtn };
+  return { avatar, userLabel, logoutBtn };
 }
 
 function updateAuthUi({ user, connectionBadge, lastSyncLabel }) {
@@ -91,6 +100,8 @@ function updateAuthUi({ user, connectionBadge, lastSyncLabel }) {
   if (connectionBadge) connectionBadge.textContent = "Sessao autenticada";
   if (lastSyncLabel) lastSyncLabel.textContent = "Acesso validado no Supabase.";
   if (controls.userLabel) controls.userLabel.textContent = `Conectado: ${email}`;
+  if (controls.userLabel) controls.userLabel.title = email;
+  if (controls.avatar) controls.avatar.textContent = email.slice(0, 1).toUpperCase();
 }
 
 async function openLoginModal(client, pageLabel) {

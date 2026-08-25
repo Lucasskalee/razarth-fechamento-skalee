@@ -5,7 +5,7 @@ import { exportCsv, openPrintReport, renderClassification, renderDashboard, rend
 import { subscribeRealtime } from "./services/realtime.js";
 import { initUi, touchLastSync } from "./services/ui.js";
 import { searchNf as searchNfService, loadNfItems } from "./services/notas.js";
-import { ensureAuthenticated } from "./services/auth.js";
+import { ensureAuthenticated } from "./services/auth.js?v=20260820-1";
 
 const refs = {
   basis: document.getElementById("basis"),
@@ -1028,6 +1028,11 @@ function setTab(targetId) {
   document.querySelectorAll(".tab").forEach((section) => section.classList.toggle("is-active", section.id === targetId));
 }
 
+function openTabFromHash() {
+  const targetId = String(window.location.hash || "").slice(1);
+  if (targetId && document.getElementById(targetId)?.classList.contains("tab")) setTab(targetId);
+}
+
 function updateLocalItem(itemId, patch) {
   state.items = state.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item));
   state.notes = groupItemsByNote(state.items, state.notes);
@@ -1353,6 +1358,8 @@ async function init() {
   renderNfHistorico();
   applyAdminTestModeVisibility();
   bindEvents();
+  openTabFromHash();
+  window.addEventListener("hashchange", openTabFromHash);
   await reloadFromDatabase({
     loadingMessage: "Carregando dados oficiais do Supabase...",
     statusMessage: "Dados oficiais carregados automaticamente do Supabase.",
