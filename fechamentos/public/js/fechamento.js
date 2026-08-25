@@ -17,6 +17,7 @@ import {
 } from "./services/fechamento.js?v=20260511-3";
 import { ensureAuthenticated } from "./services/auth.js?v=20260820-1";
 import { requestClosingAnalysis, requestClosingChat } from "./services/analiseIa.js?v=20260820-2";
+import { subscribeRealtime } from "./services/realtime.js?v=20260825-1";
 
 const refs = {
   storeFilter: document.getElementById("storeFilter"),
@@ -139,7 +140,10 @@ const state = {
       reasons: null
     }
   },
-  toastTimer: null
+  toastTimer: null,
+  realtimeTimer: null,
+  realtimeCleanup: null,
+  realtimeRefreshing: false
 };
 
 function defaultSummary() {
@@ -1311,6 +1315,9 @@ function renderItemsPanel() {
   const pendingItems = state.noteItems.filter((item) => !item.reason);
   const completedItems = state.noteItems.length - pendingItems.length;
   const suggestedReason = note.classification || "";
+  const displayedStatus = note.status === "pendente" && state.noteItems.length && !pendingItems.length
+    ? "confere"
+    : note.status;
   const canApplySuggestion = Boolean(suggestedReason && pendingItems.length && !state.savingItems);
 
   return `
@@ -1326,9 +1333,9 @@ function renderItemsPanel() {
       <label class="fechamento-field">
         <span>Status da nota</span>
         <select id="noteStatus">
-          <option value="pendente" ${note.status === "pendente" ? "selected" : ""}>Pendente</option>
-          <option value="confere" ${note.status === "confere" ? "selected" : ""}>Confere</option>
-          <option value="divergente" ${note.status === "divergente" ? "selected" : ""}>Divergente</option>
+          <option value="pendente" ${displayedStatus === "pendente" ? "selected" : ""}>Pendente</option>
+          <option value="confere" ${displayedStatus === "confere" ? "selected" : ""}>Confere</option>
+          <option value="divergente" ${displayedStatus === "divergente" ? "selected" : ""}>Divergente</option>
         </select>
       </label>
       <label class="fechamento-field">
@@ -1625,7 +1632,7 @@ async function loadGrid({ silent = false } = {}) {
   }
 }
 
-async function loadNotes({ append = false } = {}) {
+async function loadNotes({ append = false, refreshItems = false } = {}) {
   if (!state.selectedCell) return;
   try {
     state.notesLoading = true;
@@ -1645,9 +1652,16 @@ async function loadNotes({ append = false } = {}) {
     state.totalNotes = result.totalCount;
     state.hasMoreNotes = result.hasMore;
 
-    if (!state.selectedNoteKey && state.notes.length) {
-      state.selectedNoteKey = state.notes[0].noteKey;
-      await loadItems(state.selectedNoteKey);
+    if (!append) {
+      const nextNoteKey = state.notes.some((note) => note.noteKey === state.selectedNoteKey)
+        ? state.selectedNoteKey
+        : (state.notes[0]?.noteKey || "");
+      if (!nextNoteKey) {
+        state.selectedNoteKey = "";
+        state.noteItems = [];
+      } else if (refreshItems || nextNoteKey !== state.selectedNoteKey || !state.noteItems.length) {
+        await loadItems(nextNoteKey);
+      }
     }
   } catch (error) {
     console.error(error);
@@ -1667,6 +1681,7 @@ async function loadItems(noteKey) {
     state.savingItemIds.clear();
     renderDrawer();
     state.noteItems = await fetchNoteItems(noteKey);
+    await promoteSelectedNoteIfComplete();
   } catch (error) {
     console.error(error);
     state.itemsError = error.userMessage || error.message || "Falha ao carregar os produtos.";
@@ -1679,6 +1694,20 @@ async function loadItems(noteKey) {
 
 function getSelectedNote() {
   return state.notes.find((entry) => entry.noteKey === state.selectedNoteKey) || null;
+}
+
+function selectedNoteIsComplete() {
+  return Boolean(state.noteItems.length) && state.noteItems.every((item) => Boolean(item.reason));
+}
+
+async function promoteSelectedNoteIfComplete() {
+  const note = getSelectedNote();
+  if (!note || note.status !== "pendente" || !selectedNoteIsComplete()) return false;
+
+  renderDrawer();
+  const statusField = document.getElementById("noteStatus");
+  if (statusField) statusField.value = "confere";
+  return saveNote();
 }
 
 function collectItemReasonUpdates({ onlyWithReason = false } = {}) {
@@ -1751,7 +1780,8 @@ async function saveSingleItemReason(itemId) {
     const saved = await saveItemReason(itemId, reason);
     patchItemReasons([saved]);
     renderDrawer();
-    showToast("success", "Motivo do produto salvo.");
+    const promoted = await promoteSelectedNoteIfComplete();
+    if (!promoted) showToast("success", "Motivo do produto salvo.");
   } catch (error) {
     console.error(error);
     showToast("error", error.userMessage || "Nao foi possivel salvar o motivo do produto.");
@@ -1774,7 +1804,8 @@ async function saveAllItemReasons() {
     const saved = await saveItemReasons(updates);
     patchItemReasons(saved);
     renderDrawer();
-    showToast("success", `${saved.length} motivo(s) de produto salvos.`);
+    const promoted = await promoteSelectedNoteIfComplete();
+    if (!promoted) showToast("success", `${saved.length} motivo(s) de produto salvos.`);
   } catch (error) {
     console.error(error);
     showToast("error", error.userMessage || "Nao foi possivel salvar os motivos dos produtos.");
@@ -1848,7 +1879,7 @@ async function saveCell() {
 async function saveNote() {
   if (!state.selectedCell || !state.selectedNoteKey || !canPersistAudit(state.selectedCell)) {
     showToast("warning", "Selecione uma loja e um tipo especificos antes de salvar a nota.");
-    return;
+    return false;
   }
 
   const nextStatus = document.getElementById("noteStatus")?.value || "pendente";
@@ -1891,10 +1922,12 @@ async function saveNote() {
     invalidateCellCache(state.selectedCell, state.filters);
     renderGrid();
     renderDrawer();
-    showToast("success", "Nota auditada com sucesso.");
+    showToast("success", nextStatus === "confere" ? "Nota classificada e marcada como Confere." : "Nota auditada com sucesso.");
+    return true;
   } catch (error) {
     console.error(error);
     showToast("error", error.userMessage || "Nao foi possivel salvar a nota.");
+    return false;
   } finally {
     state.savingNote = false;
     renderDrawer();
@@ -1976,6 +2009,34 @@ async function loadManagerData({ silent = false } = {}) {
   }
 }
 
+async function refreshFromRealtime() {
+  if (state.realtimeRefreshing || state.savingCell || state.savingNote || state.savingItems || state.savingItemIds.size) {
+    scheduleRealtimeRefresh(1000);
+    return;
+  }
+
+  state.realtimeRefreshing = true;
+  try {
+    clearFechamentoCache();
+    await loadGrid({ silent: true });
+    await loadManagerData({ silent: true });
+    if (state.drawerOpen && state.selectedCell && !state.selectedCell.isHistorical) {
+      state.notesPage = 0;
+      await loadNotes({ refreshItems: true });
+    }
+    showToast("success", "Fechamento atualizado automaticamente pelo banco.", 2500);
+  } catch (error) {
+    console.error("[Fechamento Realtime]", error);
+  } finally {
+    state.realtimeRefreshing = false;
+  }
+}
+
+function scheduleRealtimeRefresh(delay = 500) {
+  clearTimeout(state.realtimeTimer);
+  state.realtimeTimer = window.setTimeout(refreshFromRealtime, delay);
+}
+
 function managerDecisionKey() {
   const filters = state.manager.filters;
   const product = state.manager.selectedKey || "geral";
@@ -2055,7 +2116,7 @@ function bindEvents() {
     });
   });
 
-  refs.refreshBtn.addEventListener("click", () => loadGrid());
+  refs.refreshBtn.addEventListener("click", () => refreshFromRealtime());
   refs.clearBtn.addEventListener("click", () => {
     state.filters.store = "TODAS";
     state.filters.type = "TODOS";
@@ -2181,6 +2242,15 @@ function bindEvents() {
     renderSavedDecision();
     showToast("success", "Decisao removida do recorte atual.");
   });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") scheduleRealtimeRefresh(150);
+  });
+
+  window.addEventListener("beforeunload", () => {
+    clearTimeout(state.realtimeTimer);
+    state.realtimeCleanup?.();
+  });
 }
 
 async function init() {
@@ -2200,6 +2270,12 @@ async function init() {
   syncManagerFiltersFromData();
   fillDecisionForm({});
   await loadManagerData({ silent: true });
+  try {
+    state.realtimeCleanup = await subscribeRealtime(() => scheduleRealtimeRefresh());
+  } catch (error) {
+    console.error("[Fechamento Realtime]", error);
+    setStatus("warning", "Dados carregados, mas a atualizacao automatica esta temporariamente indisponivel.");
+  }
 }
 
 init().catch((error) => {

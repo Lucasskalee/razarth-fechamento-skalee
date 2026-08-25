@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistente IA | Razarth Fechamento</title>
+  <meta name="description" content="Camada de inteligência artificial e análise preditiva sobre fechamentos mensais, perdas, margem e conciliação de supermercado.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css?v=20260825-1">
+  <link rel="stylesheet" href="./fechamento.css?v=20260825-1">
+  <link rel="stylesheet" href="./assistente-ia.css?v=20260825-1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar vertical-sidebar">
+      <input type="checkbox" role="switch" id="sidebarToggle" class="sidebar-toggle-input">
+      <div class="sidebar-top">
+        <div class="sidebar-toggle-container">
+          <label class="sidebar-toggle" for="sidebarToggle" aria-label="Alternar menu">
+            <span class="sidebar-toggle-open" aria-hidden="true">☰</span>
+            <span class="sidebar-toggle-close" aria-hidden="true">×</span>
+          </label>
+        </div>
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true"><img src="./icons/skalee-symbol-login.png" alt=""></div>
+          <div class="brand-copy">
+            <span class="brand-kicker">Razarth Control</span>
+            <h1>Assistente IA</h1>
+            <p>Inteligência analítica • Diagnósticos • Fechamentos</p>
+          </div>
+        </div>
+
+        <div class="sidebar-panel sidebar-highlight">
+          <span class="sidebar-label">Auditoria Inteligente</span>
+          <strong>Diagnósticos & Ações</strong>
+          <p>Interprete variações de perdas, identifique anomalias e obtenha sugestões práticas de melhoria.</p>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Navegacao principal">
+        <a class="side-link" href="./index.html" data-tooltip="Dashboard">
+          <span class="side-icon" aria-hidden="true">D</span>
+          <span class="side-text">Dashboard</span>
+          <small>Visão geral</small>
+        </a>
+
+        <a class="side-link is-active" href="./assistente-ia.html" data-tooltip="Assistente IA">
+          <span class="side-icon" aria-hidden="true">✨</span>
+          <span class="side-text">Assistente IA</span>
+          <small>Análise inteligente</small>
+        </a>
+
+        <div class="side-nav-group mega-nav-group" aria-label="Submenu de fechamento">
+          <button class="mega-nav-trigger" type="button" aria-haspopup="true">
+            <span class="side-icon" aria-hidden="true">F</span>
+            <span class="mega-nav-trigger-copy"><strong>Fechamento</strong><small>Auditoria mensal</small></span>
+            <span class="mega-nav-chevron" aria-hidden="true">›</span>
+          </button>
+          <div class="mega-nav-panel">
+            <span class="mega-nav-kicker">Módulos</span>
+            <a class="side-link side-link-sub" href="./fechamento.html" data-tooltip="Mensal por setor">
+              <span class="side-icon" aria-hidden="true">M</span>
+              <span class="side-text">Mensal por setor</span>
+              <small>Grade e auditoria</small>
+            </a>
+            <a class="side-link side-link-sub" href="./index.html#classif-nf" data-tooltip="Classificar NF">
+              <span class="side-icon" aria-hidden="true">N</span>
+              <span class="side-text">Classificar NF</span>
+              <small>Operação por nota</small>
+            </a>
+            <a class="side-link side-link-sub" href="./index.html#nf-revisao" data-tooltip="Revisão">
+              <span class="side-icon" aria-hidden="true">R</span>
+              <span class="side-text">Revisão</span>
+              <small>Notas classificadas</small>
+            </a>
+            <a class="side-link side-link-sub" href="./index.html#nf-historico" data-tooltip="Histórico">
+              <span class="side-icon" aria-hidden="true">H</span>
+              <span class="side-text">Histórico</span>
+              <small>Trilha de lançamentos</small>
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-panel">
+          <span class="sidebar-label">Status</span>
+          <strong id="connectionBadge">Conectando ao Supabase</strong>
+          <p id="lastSyncLabel">Dados sincronizados sob demanda.</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="wrap">
+        <header class="topbar">
+          <div class="topbar-main">
+            <div class="title-block">
+              <span class="eyebrow">Inteligência Operacional</span>
+              <h2>Assistente IA</h2>
+              <p>Analise seus fechamentos, encontre padrões e transforme dados em ações.</p>
+              <div class="ai-topbar-tag">
+                <span aria-hidden="true">✨</span>
+                <span>Análise baseada nos dados do fechamento</span>
+              </div>
+            </div>
+
+            <div class="topbar-meta">
+              <div class="meta-card">
+                <span class="meta-label">Hoje</span>
+                <strong id="currentDate">--</strong>
+                <small id="currentWeekday">--</small>
+              </div>
+              <div class="meta-card meta-card-time">
+                <span class="meta-label">Horário</span>
+                <strong id="currentTime">--:--:--</strong>
+                <small>Atualização contínua</small>
+              </div>
+              <button id="themeToggle" class="theme-toggle" type="button" aria-label="Alternar tema" aria-pressed="false">
+                <span class="theme-toggle-icon" aria-hidden="true">◐</span>
+                <span id="themeToggleLabel">Tema escuro</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Painel de Filtros de Contexto -->
+        <section class="panel hero-panel" id="aiContextFiltersContainer">
+          <!-- Injetado por aiContextFilters.js -->
+        </section>
+
+        <!-- Status Banner -->
+        <div class="status-shell" style="margin-bottom:20px;">
+          <div id="statusBanner" class="status info">Conectando ao banco e analisando fechamentos...</div>
+        </div>
+
+        <!-- KPIs Resumidos -->
+        <section class="cards cards-kpis" id="aiKpisContainer" style="margin-bottom:24px;">
+          <!-- Injetado por assistenteIa.js -->
+        </section>
+
+        <!-- Layout Dividido: Chat e Painel de Insights -->
+        <div class="ai-page-layout ai-split-view">
+          <!-- Área de Chat -->
+          <section class="ai-chat-panel" id="aiChatContainer">
+            <!-- Injetado por aiChat.js -->
+          </section>
+
+          <!-- Painel de Insights Detectados -->
+          <aside class="ai-insights-panel" id="aiInsightsContainer">
+            <!-- Injetado por aiInsights.js -->
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="pageLoading" class="loading-overlay" hidden>
+    <div class="loading-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <strong>Assistente IA</strong>
+      <span id="loadingText">Consultando dados no Supabase...</span>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="./js/assistenteIa.js?v=20260825-1"></script>
+</body>
+</html>

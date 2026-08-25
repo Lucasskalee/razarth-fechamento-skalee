@@ -853,6 +853,39 @@ button:disabled{
    margin-top:12px;
  }
 
+.dashboard-view-switcher{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.dashboard-view-label{
+  color:var(--text-soft);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-right:2px;
+}
+
+.dashboard-view-switcher button{
+  padding:9px 14px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--surface-elevated);
+  color:var(--text-soft);
+  font-weight:700;
+}
+
+.dashboard-view-switcher button[aria-pressed="true"]{
+  color:#fff;
+  border-color:rgba(79,124,255,.72);
+  background:linear-gradient(135deg, #315eea, #1286d8);
+  box-shadow:0 8px 22px rgba(49,94,234,.24);
+}
+
 .status-shell{margin-top:12px}
 
 .status{

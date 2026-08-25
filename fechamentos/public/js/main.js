@@ -1,7 +1,7 @@
 import { brl, formatDate, groupItemsByNote, normalizeReason } from "./services/classificacao.js";
-import { clearDatabase, deleteNote, getPersistenceInfo, importXmlFiles, loadAllData, updateCompetenceMonthForNote, updateItemField, updateReasonForNote, updateSectorForNote } from "./services/importacao.js";
+import { clearDatabase, deleteNote, getPersistenceInfo, importXmlFiles, loadAllData, loadDashboardSummary, updateCompetenceMonthForNote, updateItemField, updateReasonForNote, updateSectorForNote } from "./services/importacao.js";
 import { applyFilters, buildNoteOptions, refreshFilters } from "./services/filtros.js";
-import { exportCsv, openPrintReport, renderClassification, renderDashboard, renderItems } from "./services/dashboard.js";
+import { exportCsv, openPrintReport, renderClassification, renderDashboard, renderDashboardSummary, renderItems } from "./services/dashboard.js";
 import { subscribeRealtime } from "./services/realtime.js";
 import { initUi, touchLastSync } from "./services/ui.js";
 import { searchNf as searchNfService, loadNfItems } from "./services/notas.js";
@@ -41,6 +41,7 @@ const refs = {
   sectorChart: document.getElementById("sectorChart"),
   sectorChartEmpty: document.getElementById("sectorChartEmpty"),
   sectorChartSummary: document.getElementById("sectorChartSummary"),
+  temporalTag: document.getElementById("temporalTag"),
   pendingExecutive: document.getElementById("pendingExecutive"),
   pendingExecutiveTitle: document.getElementById("pendingExecutiveTitle"),
   pendingExecutiveText: document.getElementById("pendingExecutiveText"),
@@ -191,6 +192,7 @@ const state = {
   realtimeTimer: null,
   toastTimer: null,
   uiCleanup: null,
+  dashboardView: "all",
   nfModule: {
     currentNote: null,
     entries: [],
@@ -974,10 +976,10 @@ function refreshUi() {
   renderNfHistorico();
 }
 
-async function reloadFromDatabase({ loadingMessage, statusMessage, emptyMessage } = {}) {
+async function reloadFromDatabase({ loadingMessage, statusMessage, emptyMessage, prefetchedNotes = null } = {}) {
   try {
     if (loadingMessage) setLoading(true, loadingMessage);
-    const database = await loadAllData();
+    const database = await loadAllData({ prefetchedNotes });
     syncState(database);
     refreshUi();
     console.log("[Dashboard] Banco oficial:", {
@@ -1360,10 +1362,35 @@ async function init() {
   bindEvents();
   openTabFromHash();
   window.addEventListener("hashchange", openTabFromHash);
+  let prefetchedNotes = null;
+  try {
+    setLoading(true, "Carregando resumo do Dashboard...");
+    const initial = await loadDashboardSummary();
+    prefetchedNotes = initial.notes;
+    renderDashboardSummary(initial.summary, refs);
+    setStatus("success", "Resumo carregado. Os detalhes estao sendo atualizados em segundo plano.");
+  } catch (error) {
+    console.error(error);
+    setStatus("warning", "O resumo rapido nao ficou disponivel. Carregando o painel completo.");
+  } finally {
+    setLoading(false);
+  }
   await reloadFromDatabase({
-    loadingMessage: "Carregando dados oficiais do Supabase...",
     statusMessage: "Dados oficiais carregados automaticamente do Supabase.",
-    emptyMessage: "Nenhum XML importado ainda."
+    emptyMessage: "Nenhum XML importado ainda.",
+    prefetchedNotes
+  });
+
+  document.querySelectorAll("[data-dashboard-view]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.dashboardView = button.dataset.dashboardView || "all";
+      refs.typeFilter.value = "TODOS";
+      document.querySelectorAll("[data-dashboard-view]").forEach((entry) => {
+        entry.setAttribute("aria-pressed", String(entry === button));
+      });
+      refreshUi();
+      if (state.items.length) setStatus("success", "Visao do Dashboard atualizada.");
+    });
   });
   try {
     state.realtimeCleanup = await subscribeRealtime(() => scheduleRealtimeReload());

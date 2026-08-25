@@ -43,6 +43,14 @@
       "destination": "/public/fechamento.html"
     },
     {
+      "source": "/assistente-ia",
+      "destination": "/public/assistente-ia.html"
+    },
+    {
+      "source": "/assistente-ia/",
+      "destination": "/public/assistente-ia.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/public/$1"
     }

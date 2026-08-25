@@ -32,14 +32,14 @@
         </div>
         <div class="brand">
           <div class="brand-logo" aria-hidden="true"><img src="./icons/skalee-symbol-login.png" alt=""></div>
-<div class="brand-copy">
-           <span class="brand-kicker">Fechamento Skalee</span>
-           <h1>RAZARTH</h1>
-           <p>Importação XML • Classificação • Operação</p>
-         </div>
+          <div class="brand-copy">
+            <span class="brand-kicker">Fechamento Skalee</span>
+            <h1>RAZARTH</h1>
+            <p>Importação XML • Classificação • Operação</p>
+          </div>
         </div>
 
-<div class="sidebar-panel sidebar-highlight">
+        <div class="sidebar-panel sidebar-highlight">
            <span class="sidebar-label">Operação</span>
            <strong>Fluxo seguro e contínuo</strong>
            <p>Importe XMLs, acompanhe indicadores e mantenha histórico consolidado no Supabase.</p>
@@ -62,6 +62,11 @@
           <span class="side-text">Itens</span>
           <small>Busca detalhada</small>
         </button>
+        <a class="side-link" href="./assistente-ia.html" data-tooltip="Assistente IA">
+          <span class="side-icon" aria-hidden="true">✨</span>
+          <span class="side-text">Assistente IA</span>
+          <small>Análise inteligente</small>
+        </a>
         <div class="side-nav-group mega-nav-group" aria-label="Submenu de fechamento">
           <button class="mega-nav-trigger" type="button" aria-haspopup="true">
             <span class="side-icon" aria-hidden="true">F</span>
@@ -167,6 +172,13 @@
             <select id="monthFilter"><option value="TODOS">Todos os meses</option></select>
           </div>
 
+          <div class="dashboard-view-switcher" aria-label="Visao do Dashboard">
+            <span class="dashboard-view-label">Visao</span>
+            <button type="button" data-dashboard-view="all" aria-pressed="true">Todos</button>
+            <button type="button" data-dashboard-view="loss-exits" aria-pressed="false">Perdas + Saidas</button>
+            <button type="button" data-dashboard-view="usage" aria-pressed="false">Uso e Consumo</button>
+          </div>
+
           <div class="hero-filter-actions">
             <button id="pendingOnlyBtn" class="pending-toggle" type="button" aria-pressed="false">Somente pendentes</button>
           </div>
@@ -248,7 +260,7 @@
             <section class="panel chart-panel">
               <div class="panel-head">
                 <div>
-                  <span class="panel-tag">Analise temporal</span>
+                  <span class="panel-tag" id="temporalTag">Analise temporal</span>
                   <h3>Movimentacao mensal</h3>
                   <p class="muted-note">Acompanhe a evolucao de perdas e uso/consumo por periodo com leitura mais limpa e consistente.</p>
                 </div>

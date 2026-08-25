@@ -28,6 +28,8 @@ const persistenceState = {
 
 const RESET_IMPORT_RPC = "reset_import_data";
 const SUPABASE_PAGE_SIZE = 1000;
+const NOTE_READ_COLUMNS = "note_key, access_key, source_file, invoice, store, emission_date, emission_month, competence_month, operation, type, display_type, sector, sector_manual, total_value, item_count";
+const ITEM_READ_COLUMNS = "id, note_key, access_key, source_file, invoice, store, emission_date, emission_month, competence_month, operation, type, display_type, sector, sector_manual, product, quantity, unit_value, value, reason, selected";
 
 function setPersistence(mode, detail = "") {
   persistenceState.mode = mode;
@@ -227,7 +229,7 @@ async function loadNotesFromDatabase(client) {
   const rows = await fetchAllRows(
     (from, to) => client
       .from(TABLES.notes)
-      .select("*")
+      .select(NOTE_READ_COLUMNS)
       .order("emission_date", { ascending: false, nullsFirst: false })
       .order("invoice", { ascending: true })
       .range(from, to),
@@ -241,7 +243,7 @@ async function loadItemsFromDatabase(client) {
   const rows = await fetchAllRows(
     (from, to) => client
       .from(TABLES.items)
-      .select("*")
+      .select(ITEM_READ_COLUMNS)
       .order("emission_date", { ascending: false, nullsFirst: false })
       .order("item_index", { ascending: true })
       .range(from, to),
@@ -473,10 +475,36 @@ export async function loadAllItems() {
   return database.items;
 }
 
-export async function loadAllData() {
+export async function loadDashboardSummary() {
+  const client = getSupabaseClient();
+  const notes = await loadNotesFromDatabase(client);
+  const visibleNotes = notes.filter((note) => note.type !== "Outros");
+  const totalsByType = visibleNotes.reduce((totals, note) => {
+    totals[note.type] = (totals[note.type] || 0) + Number(note.totalValue || 0);
+    return totals;
+  }, {});
+  const totalsByStore = visibleNotes.reduce((totals, note) => {
+    totals[note.store] = (totals[note.store] || 0) + Number(note.totalValue || 0);
+    return totals;
+  }, {});
+  const topStore = Object.entries(totalsByStore).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+  return {
+    notes,
+    summary: {
+      noteCount: visibleNotes.length,
+      totalValue: visibleNotes.reduce((sum, note) => sum + Number(note.totalValue || 0), 0),
+      lossValue: Number(totalsByType.Perdas || 0),
+      usageValue: Number(totalsByType["Uso/Consumo"] || 0),
+      topStore
+    }
+  };
+}
+
+export async function loadAllData({ prefetchedNotes = null } = {}) {
   try {
     const client = getSupabaseClient();
-    const notes = await loadNotesFromDatabase(client);
+    const notes = Array.isArray(prefetchedNotes) ? prefetchedNotes : await loadNotesFromDatabase(client);
 
     try {
       const items = await loadItemsFromDatabase(client);
@@ -574,24 +602,27 @@ async function detectDuplicate(client, parsedEntry) {
   };
 }
 
-async function saveNote(client, note) {
-  const { error } = await client
-    .from(TABLES.notes)
-    .upsert([note], { onConflict: "note_key" });
+async function saveImportedEntry(parsedEntry) {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.getSession();
+  if (error || !data?.session?.access_token) {
+    throw buildFriendlyError("Sua sessao expirou durante a importacao.", error || new Error("missing_session"));
+  }
 
-  if (error) throw buildFriendlyError(`Falha ao salvar a nota ${note.invoice} no banco.`, error);
-}
-
-async function saveItems(client, parsedEntry) {
-  for (const chunk of chunkArray(parsedEntry.items, 300)) {
-    if (!chunk.length) continue;
-    const { error } = await client
-      .from(TABLES.items)
-      .upsert(chunk, { onConflict: "id" });
-
-    if (error) {
-      throw buildFriendlyError(`A nota ${parsedEntry.note.invoice} foi salva, mas os itens falharam ao gravar no banco.`, error);
-    }
+  const response = await fetch("/api/importar-nota", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${data.session.access_token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ note: parsedEntry.note, items: parsedEntry.items })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result.imported !== true || Number(result.itemCount) !== parsedEntry.items.length) {
+    throw buildFriendlyError(
+      `Falha ao salvar a nota ${parsedEntry.note.invoice} no banco.`,
+      new Error(result.error || "import_not_confirmed")
+    );
   }
 }
 
@@ -642,8 +673,7 @@ async function processSingleXml(client, file, summary, index, totalXmlFiles, onP
       return;
     }
 
-    await saveNote(client, parsedEntry.note);
-    await saveItems(client, parsedEntry);
+    await saveImportedEntry(parsedEntry);
     await verifyImportedEntry(client, parsedEntry);
 
     logImportEvent("importado", parsedEntry, { detalhe: "Importado com sucesso" });
@@ -747,19 +777,36 @@ export async function updateCompetenceMonthForNote(noteKey, competenceMonth) {
 }
 
 export async function deleteNote(noteKey) {
-  return withLocalFallback(
-    async () => {
-      const client = getSupabaseClient();
-      const { error } = await client.from(TABLES.notes).delete().eq("note_key", noteKey);
-      if (error) throw error;
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.getSession();
+  if (error || !data?.session?.access_token) {
+    const authError = new Error("Sua sessao expirou. Entre novamente para excluir a nota.");
+    authError.userMessage = authError.message;
+    throw authError;
+  }
+
+  const response = await fetch("/api/excluir-nota", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${data.session.access_token}`,
+      "Content-Type": "application/json"
     },
-    async () => {
-      const database = readLocalDatabase();
-      database.notes = (database.notes || []).filter((row) => row.note_key !== noteKey);
-      database.items = (database.items || []).filter((row) => row.note_key !== noteKey);
-      writeLocalDatabase(database);
-    }
-  );
+    body: JSON.stringify({ noteKey })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result.deleted !== true) {
+    const deleteError = new Error(result.error || "Nao foi possivel confirmar a exclusao da nota.");
+    deleteError.userMessage = deleteError.message;
+    throw deleteError;
+  }
+
+  const database = readLocalDatabase();
+  database.notes = (database.notes || []).filter((row) => row.note_key !== noteKey);
+  database.items = (database.items || []).filter((row) => row.note_key !== noteKey);
+  writeLocalDatabase(database);
+  clearFechamentoCache();
+  clearMonthlyClosingCache();
+  return result;
 }
 
 async function clearRemoteTable(client, tableName, keyField) {

@@ -137,7 +137,28 @@ function buildDoughnutTooltipOptions(detailsByLabel, totalValue, singleNoteDetai
 }
 
 function chartLabelsFromMap(map) {
-  return Object.keys(map).sort((a, b) => String(a).localeCompare(String(b), "pt-BR"));
+  const monthOrder = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+  const chronology = (value) => {
+    const normalized = String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const [monthLabel, yearLabel] = normalized.split("/");
+    const month = monthOrder[monthLabel?.slice(0, 3)] || 0;
+    const year = Number(yearLabel || 0);
+    return (year * 100) + month;
+  };
+  return Object.keys(map).sort((a, b) => chronology(a) - chronology(b) || String(a).localeCompare(String(b), "pt-BR"));
+}
+
+function filterDashboardView(items, view = "all") {
+  if (view === "all") return items;
+  return items.filter((item) => {
+    const normalizedType = String(item.type || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    if (view === "loss-exits") return normalizedType === "perdas" || normalizedType.includes("saida entre lojas");
+    if (view === "usage") return normalizedType.includes("uso/consumo") || normalizedType.includes("uso e consumo");
+    return true;
+  });
 }
 
 export function normalizeSector(value) {
@@ -399,7 +420,7 @@ function renderSectorChart(sectorsSummary, refs, chartTheme) {
 }
 
 export function renderDashboard(state, refs) {
-  const dashboardItems = state.filtered.filter((item) => item.type !== "Outros");
+  const dashboardItems = filterDashboardView(state.filtered, state.dashboardView).filter((item) => item.type !== "Outros");
   const basis = refs.basis.value;
   const pendingSummary = getPendingSummary(dashboardItems);
   const sectorsSummary = buildSectorSummary(dashboardItems);
@@ -545,13 +566,22 @@ export function renderDashboard(state, refs) {
   }).join("") || renderEmpty("Nenhum produto no filtro atual.");
 
   renderSectorChartSummary(sectorsSummary, refs);
-  renderCharts(state, refs, sectorsSummary);
+  renderCharts(state, refs, sectorsSummary, dashboardItems);
 }
 
-export function renderCharts(state, refs, sectorsSummary = buildSectorSummary(state.filtered.filter((item) => item.type !== "Outros"))) {
-  const chartItems = state.filtered.filter((item) => item.type !== "Outros");
+export function renderDashboardSummary(summary, refs) {
+  refs.kpiNotes.textContent = String(summary.noteCount || 0);
+  refs.kpiTotal.textContent = brl(summary.totalValue || 0);
+  refs.kpiLoss.textContent = brl(summary.lossValue || 0);
+  refs.kpiUsage.textContent = brl(summary.usageValue || 0);
+  refs.kpiStore.textContent = summary.topStore || "-";
+}
+
+export function renderCharts(state, refs, sectorsSummary = buildSectorSummary(filterDashboardView(state.filtered, state.dashboardView).filter((item) => item.type !== "Outros")), sourceItems = null) {
+  const chartItems = sourceItems || filterDashboardView(state.filtered, state.dashboardView).filter((item) => item.type !== "Outros");
   const basis = refs.basis.value;
   const focusedSector = refs.sectorFilter.value !== "TODOS";
+  if (refs.temporalTag) refs.temporalTag.textContent = focusedSector ? `Analise temporal - ${refs.sectorFilter.value}` : "Analise temporal";
   const chartTheme = chartThemeOptions();
   const accent = getCssVar("--accent", "#0f5bd4");
   const accentAlt = getCssVar("--accent-2", "#18a0b7");
@@ -578,20 +608,34 @@ export function renderCharts(state, refs, sectorsSummary = buildSectorSummary(st
   }
 
   if (focusedSector) {
-    const monthMap = {}, reasonMap = {};
+    const monthMap = {}, typeMap = { Perdas: 0, "Uso/Consumo": 0 };
     chartItems.forEach((item) => {
       const month = basis === "competence" ? item.competenceMonth : item.emissionMonth;
-      const reason = item.reason || "Sem motivo";
-      if (!monthMap[month]) monthMap[month] = {};
-      monthMap[month][reason] = (monthMap[month][reason] || 0) + item.value;
-      reasonMap[reason] = (reasonMap[reason] || 0) + item.value;
+      const normalizedType = String(item.type || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const value = Number(item.value || 0);
+      if (!monthMap[month]) monthMap[month] = { Perdas: 0, "Uso/Consumo": 0 };
+      if (normalizedType === "perdas") {
+        monthMap[month].Perdas += value;
+        typeMap.Perdas += value;
+      }
+      if (normalizedType === "uso/consumo" || normalizedType === "uso e consumo") {
+        monthMap[month]["Uso/Consumo"] += value;
+        typeMap["Uso/Consumo"] += value;
+      }
     });
     const labels = chartLabelsFromMap(monthMap);
-  const typeDetails = buildSliceDetails(chartItems, (item) => item.type);
-    const reasons = Object.keys(reasonMap).sort((a, b) => reasonMap[b] - reasonMap[a]);
-    const reasonDetails = buildSliceDetails(chartItems, (item) => item.reason || "Sem motivo");
-    state.monthChart = new window.Chart(refs.monthChart, { type: "bar", data: { labels, datasets: reasons.map((reason) => ({ label: reason, data: labels.map((label) => monthMap[label][reason] || 0), backgroundColor: REASON_COLORS[reason] || textSoft, borderRadius: 8 })) }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: chartTheme.plugins, scales: chartTheme.scales } });
-    state.typeChart = new window.Chart(refs.typeChart, { type: "doughnut", data: { labels: reasons, datasets: [{ data: reasons.map((reason) => reasonMap[reason] || 0), backgroundColor: reasons.map((reason) => REASON_COLORS[reason] || textSoft), borderColor: surface, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { ...chartTheme.plugins, ...buildDoughnutTooltipOptions(reasonDetails, totalValue, singleNoteDetails) } } });
+    const typeLabels = ["Perdas", "Uso/Consumo"];
+    const focusedTypeItems = chartItems.filter((item) => {
+      const normalizedType = String(item.type || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      return normalizedType === "perdas" || normalizedType === "uso/consumo" || normalizedType === "uso e consumo";
+    });
+    const focusedTypeDetails = buildSliceDetails(focusedTypeItems, (item) => {
+      const normalizedType = String(item.type || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      return normalizedType === "perdas" ? "Perdas" : "Uso/Consumo";
+    });
+    const focusedTotal = typeMap.Perdas + typeMap["Uso/Consumo"];
+    state.monthChart = new window.Chart(refs.monthChart, { type: "bar", data: { labels, datasets: [{ label: "Perdas", data: labels.map((label) => monthMap[label].Perdas || 0), backgroundColor: textStrong, borderRadius: 8 }, { label: "Uso/Consumo", data: labels.map((label) => monthMap[label]["Uso/Consumo"] || 0), backgroundColor: accent, borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: chartTheme.plugins, scales: chartTheme.scales } });
+    state.typeChart = new window.Chart(refs.typeChart, { type: "doughnut", data: { labels: typeLabels, datasets: [{ data: typeLabels.map((type) => typeMap[type]), backgroundColor: [textStrong, accent], borderColor: surface, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { ...chartTheme.plugins, ...buildDoughnutTooltipOptions(focusedTypeDetails, focusedTotal, singleNoteDetails) } } });
     state.sectorChart = renderSectorChart(sectorsSummary, refs, chartTheme);
     return;
   }
