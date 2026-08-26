@@ -1,4 +1,4 @@
-const CACHE_NAME = "razarth-cache-v17";
+const CACHE_NAME = "razarth-cache-v19";
 const APP_ASSETS = [
   "./",
   "./index.html",

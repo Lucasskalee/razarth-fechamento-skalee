@@ -33,16 +33,16 @@
         <div class="brand">
           <div class="brand-logo" aria-hidden="true"><img src="./icons/skalee-symbol-login.png" alt=""></div>
 <div class="brand-copy">
-           <span class="brand-kicker">Fechamento Skalee</span>
-           <h1>RAZARTH</h1>
-           <p>Importação XML • Classificação • Operação</p>
+           <span class="brand-kicker">Skalee</span>
+           <h1>Fechamentos</h1>
+           <p>Gestao operacional, perdas e fechamento mensal.</p>
          </div>
         </div>
 
 <div class="sidebar-panel sidebar-highlight">
            <span class="sidebar-label">Operação</span>
-           <strong>Fluxo seguro e contínuo</strong>
-           <p>Importe XMLs, acompanhe indicadores e mantenha histórico consolidado no Supabase.</p>
+           <strong>Fluxo de fechamento</strong>
+           <p>Dashboard, importacao, classificacao e analise em um caminho unico.</p>
          </div>
       </div>
 
@@ -52,74 +52,72 @@
           <span class="side-text">Dashboard</span>
           <small>Visao geral</small>
         </button>
-        <button class="side-link tabbtn" data-tab="classif" data-tooltip="Classificacao" type="button" aria-label="Abrir Classificacao">
-          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4V4Zm0 6h10v3H4v-3Zm0 6h16v3H4v-3Zm13.5-6 1.7 1.7L23 7.9 21.6 6.5l-2.4 2.4-.3-.3-1.4 1.4Z"/></svg></span>
-          <span class="side-text">Classificacao</span>
-          <small>Analise por nota</small>
+        <a class="side-link side-link-shortcut" href="./fechamento.html" data-tooltip="Fechamento" aria-label="Abrir Fechamento Mensal">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
+          <span class="side-text">Fechamento</span>
+          <small>Mensal por setor</small>
+        </a>
+        <button class="side-link tabbtn" data-tab="classif-nf" data-tooltip="Importar" type="button" aria-label="Abrir Importar">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 10h4v5h6v-5h4l-7-7ZM5 19h14v2H5v-2Z"/></svg></span>
+          <span class="side-text">Importar</span>
+          <small>XML e notas</small>
         </button>
-        <button class="side-link tabbtn" data-tab="items" data-tooltip="Itens" type="button" aria-label="Abrir Itens">
-          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.7 10.7l4.8 4.8 1.4-1.4-4.8-4.8A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/></svg></span>
-          <span class="side-text">Itens</span>
-          <small>Busca detalhada</small>
+        <button class="side-link tabbtn" data-tab="classif" data-tooltip="Analises" type="button" aria-label="Abrir Analises">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm1-8h3v6H5v-6Zm5-5h3v11h-3V6Zm5 3h3v8h-3V9Zm4-5h3v13h-3V4Z"/></svg></span>
+          <span class="side-text">Analises</span>
+          <small>Classificacao e motivos</small>
         </button>
-        <div class="side-nav-group" aria-label="Submenu de fechamento">
-          <span class="side-nav-group-title">Fechamento</span>
-          <a class="side-link side-link-sub side-link-shortcut" href="./fechamento.html" data-tooltip="Mensal por setor" aria-label="Abrir Mensal por setor">
-            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
-            <span class="side-text">Mensal por setor</span>
-            <small>Abertura completa</small>
-          </a>
-          <button class="side-link side-link-sub tabbtn" data-tab="classif-nf" data-tooltip="Classificar NF" type="button" aria-label="Abrir Classificar NF">
-            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5L14 3.5ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg></span>
-            <span class="side-text">Classificar NF</span>
-            <small>Distribuicao operacional</small>
-          </button>
-          <button class="side-link side-link-sub tabbtn" data-tab="nf-revisao" data-tooltip="Revisao" type="button" aria-label="Abrir Revisao">
-            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5V3Zm2 2v14h10V5H7Zm2 3h6v2H9V8Zm0 4h6v2H9v-2Z"/></svg></span>
-            <span class="side-text">Revisao</span>
-            <small>Notas classificadas</small>
-          </button>
-          <button class="side-link side-link-sub tabbtn" data-tab="nf-historico" data-tooltip="Historico" type="button" aria-label="Abrir Historico">
-            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 1-8.5 6H2l3.8-3.8L9.6 9H7a7 7 0 1 0 6-4V3Zm-1 4h2v6l4 2-.9 1.8-5.1-2.6V7Z"/></svg></span>
-            <span class="side-text">Historico</span>
-            <small>Trilha de lancamentos</small>
-          </button>
-        </div>
+        <button class="side-link tabbtn" data-tab="items" data-tooltip="Comparar" type="button" aria-label="Abrir Comparar">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h2v3h10v2H9v3H7V9H4V7h3V4Zm8 8h2v3h3v2h-3v3h-2v-3H5v-2h10v-3Z"/></svg></span>
+          <span class="side-text">Comparar</span>
+          <small>Itens e produtos</small>
+        </button>
+        <button class="side-link tabbtn" data-tab="ai-assistente" data-tooltip="IA Assistente" type="button" aria-label="Abrir IA Assistente">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 14 8l6 2-6 2-2 6-2-6-6-2 6-2 2-6Zm6 12 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3ZM5 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z"/></svg></span>
+          <span class="side-text">IA Assistente</span>
+          <small>Anomalias e acoes</small>
+        </button>
+        <button class="side-link tabbtn" data-tab="nf-historico" data-tooltip="Historico" type="button" aria-label="Abrir Historico">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 1-8.5 6H2l3.8-3.8L9.6 9H7a7 7 0 1 0 6-4V3Zm-1 4h2v6l4 2-.9 1.8-5.1-2.6V7Z"/></svg></span>
+          <span class="side-text">Historico</span>
+          <small>Registros</small>
+        </button>
       </nav>
 
 <div class="sidebar-bottom">
-         <div class="sidebar-panel">
-           <span class="sidebar-label">Status</span>
-           <strong id="connectionBadge">Sincronização automática</strong>
-           <p id="lastSyncLabel">Dados atualizam sem recarga manual.</p>
-         </div>
+         <button class="side-link tabbtn" data-tab="nf-revisao" data-tooltip="Mais" type="button" aria-label="Abrir Mais">
+           <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z"/></svg></span>
+           <span class="side-text">Mais</span>
+           <small>Revisao e administracao</small>
+         </button>
        </div>
     </aside>
 
     <nav class="mobile-nav" aria-label="Navegacao principal mobile">
       <button class="mobile-nav-item tabbtn is-active" data-tab="dash" type="button" aria-label="Abrir Dashboard">
         <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg></span>
-        <span>Dashboard</span>
-      </button>
-      <button class="mobile-nav-item tabbtn" data-tab="classif" type="button" aria-label="Abrir Classificacao">
-        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4V4Zm0 6h10v3H4v-3Zm0 6h16v3H4v-3Zm13.5-6 1.7 1.7L23 7.9 21.6 6.5l-2.4 2.4-.3-.3-1.4 1.4Z"/></svg></span>
-        <span>Classificacao</span>
+        <span>Inicio</span>
       </button>
       <button class="mobile-nav-item tabbtn" data-tab="classif-nf" type="button" aria-label="Abrir Classificar NF">
         <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5L14 3.5ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg></span>
-        <span>NF</span>
+        <span>Fechar</span>
       </button>
-      <a class="mobile-nav-item" href="./fechamento.html" aria-label="Abrir Grade Mensal">
-        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
-        <span>Grade</span>
+      <a class="mobile-nav-item" href="#importacao" aria-label="Ir para importacao">
+        <span class="mobile-nav-icon mobile-nav-plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg></span>
+        <span>Importar</span>
       </a>
+      <button class="mobile-nav-item tabbtn" data-tab="classif" type="button" aria-label="Abrir Analises">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm1-8h3v6H5v-6Zm5-5h3v11h-3V6Zm5 3h3v8h-3V9Zm4-5h3v13h-3V4Z"/></svg></span>
+        <span>Analise</span>
+      </button>
       <details class="mobile-more">
         <summary class="mobile-nav-item mobile-nav-more-trigger" aria-label="Abrir mais modulos">
           <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg></span>
           <span>Mais</span>
         </summary>
         <div class="mobile-more-panel">
-          <button class="mobile-more-link tabbtn" data-tab="items" type="button">Itens detalhados</button>
+          <button class="mobile-more-link tabbtn" data-tab="items" type="button">Comparar produtos</button>
+          <button class="mobile-more-link tabbtn" data-tab="ai-assistente" type="button">IA Assistente</button>
           <button class="mobile-more-link tabbtn" data-tab="nf-revisao" type="button">Revisao</button>
           <button class="mobile-more-link tabbtn" data-tab="nf-historico" type="button">Historico</button>
         </div>
@@ -131,9 +129,9 @@
         <header class="topbar">
           <div class="topbar-main">
 <div class="title-block">
-               <span class="eyebrow">Dashboard</span>
-               <h2>Visão geral dos fechamentos</h2>
-               <p>Todos os módulos ativos: importação XML, Supabase, filtros e classificação.</p>
+               <span id="pageEyebrow" class="eyebrow">Dashboard</span>
+               <h2 id="pageTitle">Visão geral dos fechamentos</h2>
+               <p id="pageDescription">Todos os módulos ativos: importação XML, Supabase, filtros e classificação.</p>
              </div>
 
             <div class="topbar-meta">
@@ -161,7 +159,7 @@
           </div>
         </header>
 
-<section class="panel hero-panel">
+<section id="importacao" class="panel hero-panel">
            <div class="hero-grid">
              <div class="hero-copy">
                <span class="hero-chip">Importação</span>
@@ -678,6 +676,44 @@
             </div>
             <div id="nfHistoricoBody" class="nf-historico-feed">
               <div class="empty">Nenhuma transicao registrada ainda.</div>
+            </div>
+          </section>
+        </section>
+
+        <section id="ai-assistente" class="tab">
+          <section class="panel closing-panel ai-panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">IA Assistente</span>
+                <h3>Direcao operacional</h3>
+                <p class="muted-note">Leitura executiva para transformar perdas, consumo, pendencias e historico em proximas acoes.</p>
+              </div>
+            </div>
+
+            <div class="ai-assistant-grid">
+              <article class="ai-action-card">
+                <span class="ai-action-icon" aria-hidden="true">%</span>
+                <strong>Margem x perda</strong>
+                <p>Compare impacto de perdas por setor, loja e competencia para priorizar correcao.</p>
+              </article>
+              <article class="ai-action-card">
+                <span class="ai-action-icon" aria-hidden="true">!</span>
+                <strong>Anomalias</strong>
+                <p>Encontre notas, produtos ou motivos fora do padrao do fechamento atual.</p>
+              </article>
+              <article class="ai-action-card">
+                <span class="ai-action-icon" aria-hidden="true">?</span>
+                <strong>Perguntas sobre dados</strong>
+                <p>Espaco reservado para consultas em linguagem natural sobre XMLs e historico.</p>
+              </article>
+            </div>
+
+            <div class="ai-prompt-shell">
+              <label class="closing-field">
+                <span>Pergunte ao assistente</span>
+                <input type="search" placeholder="Ex.: quais setores puxaram mais perdas neste mes?">
+              </label>
+              <button type="button" disabled>Conectar IA</button>
             </div>
           </section>
         </section>

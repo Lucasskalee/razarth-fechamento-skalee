@@ -9,6 +9,9 @@ import { ensureAuthenticated } from "./services/auth.js";
 
 const refs = {
   basis: document.getElementById("basis"),
+  pageEyebrow: document.getElementById("pageEyebrow"),
+  pageTitle: document.getElementById("pageTitle"),
+  pageDescription: document.getElementById("pageDescription"),
   storeFilter: document.getElementById("storeFilter"),
   typeFilter: document.getElementById("typeFilter"),
   sectorFilter: document.getElementById("sectorFilter"),
@@ -104,6 +107,44 @@ const refs = {
   nfReviewBody: document.getElementById("nfReviewBody"),
   nfResultStatus: document.getElementById("nfResultStatus"),
   nfImpactPanel: document.getElementById("nfImpactPanel")
+};
+
+const TAB_META = {
+  dash: {
+    eyebrow: "Dashboard",
+    title: "Visão geral dos fechamentos",
+    description: "Resumo geral, perdas, uso/consumo, CMV, alertas e indicadores do periodo."
+  },
+  classif: {
+    eyebrow: "Analises",
+    title: "Analises e classificacao",
+    description: "Compare motivos, setores e itens para entender onde o fechamento exige acao."
+  },
+  items: {
+    eyebrow: "Comparar",
+    title: "Comparar produtos e movimentos",
+    description: "Busca detalhada de itens importados para cruzar loja, tipo, setor, motivo e mes."
+  },
+  "classif-nf": {
+    eyebrow: "Importar",
+    title: "Importar e classificar notas",
+    description: "Fluxo operacional para localizar NF, distribuir loja/setor/competencia e revisar antes do fechamento."
+  },
+  "ai-assistente": {
+    eyebrow: "IA Assistente",
+    title: "Direcao operacional com IA",
+    description: "Area principal para anomalias, perguntas sobre dados e sugestoes de acao."
+  },
+  "nf-historico": {
+    eyebrow: "Historico",
+    title: "Historico de fechamentos",
+    description: "Trilha de lancamentos, alteracoes e registros para auditoria operacional."
+  },
+  "nf-revisao": {
+    eyebrow: "Mais",
+    title: "Revisao e administracao",
+    description: "Revise lancamentos classificados e acesse rotinas complementares do fechamento."
+  }
 };
 
 const NF_HISTORY_KEY = "razarth-fechamento-inteligente-history-v1";
@@ -1024,6 +1065,12 @@ function scheduleRealtimeReload() {
 }
 
 function setTab(targetId) {
+  const meta = TAB_META[targetId];
+  if (meta) {
+    if (refs.pageEyebrow) refs.pageEyebrow.textContent = meta.eyebrow;
+    if (refs.pageTitle) refs.pageTitle.textContent = meta.title;
+    if (refs.pageDescription) refs.pageDescription.textContent = meta.description;
+  }
   document.querySelectorAll(".tabbtn").forEach((button) => {
     const isActive = button.dataset.tab === targetId;
     button.classList.toggle("is-active", isActive);
