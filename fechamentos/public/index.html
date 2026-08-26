@@ -22,7 +22,7 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar vertical-sidebar">
-      <input type="checkbox" role="switch" id="sidebarToggle" class="sidebar-toggle-input">
+      <input type="checkbox" role="switch" id="sidebarToggle" class="sidebar-toggle-input" checked>
       <div class="sidebar-top">
         <div class="sidebar-toggle-container">
           <label class="sidebar-toggle" for="sidebarToggle" aria-label="Alternar menu">
@@ -47,40 +47,40 @@
       </div>
 
       <nav class="side-nav" aria-label="Navegacao principal">
-        <button class="side-link tabbtn is-active" data-tab="dash" data-tooltip="Dashboard" type="button">
-          <span class="side-icon" aria-hidden="true">D</span>
+        <button class="side-link tabbtn is-active" data-tab="dash" data-tooltip="Dashboard" type="button" aria-label="Abrir Dashboard">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg></span>
           <span class="side-text">Dashboard</span>
           <small>Visao geral</small>
         </button>
-        <button class="side-link tabbtn" data-tab="classif" data-tooltip="Classificacao" type="button">
-          <span class="side-icon" aria-hidden="true">C</span>
+        <button class="side-link tabbtn" data-tab="classif" data-tooltip="Classificacao" type="button" aria-label="Abrir Classificacao">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4V4Zm0 6h10v3H4v-3Zm0 6h16v3H4v-3Zm13.5-6 1.7 1.7L23 7.9 21.6 6.5l-2.4 2.4-.3-.3-1.4 1.4Z"/></svg></span>
           <span class="side-text">Classificacao</span>
           <small>Analise por nota</small>
         </button>
-        <button class="side-link tabbtn" data-tab="items" data-tooltip="Itens" type="button">
-          <span class="side-icon" aria-hidden="true">I</span>
+        <button class="side-link tabbtn" data-tab="items" data-tooltip="Itens" type="button" aria-label="Abrir Itens">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.7 10.7l4.8 4.8 1.4-1.4-4.8-4.8A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/></svg></span>
           <span class="side-text">Itens</span>
           <small>Busca detalhada</small>
         </button>
         <div class="side-nav-group" aria-label="Submenu de fechamento">
           <span class="side-nav-group-title">Fechamento</span>
-          <a class="side-link side-link-sub side-link-shortcut" href="./fechamento.html" data-tooltip="Mensal por setor">
-            <span class="side-icon" aria-hidden="true">M</span>
+          <a class="side-link side-link-sub side-link-shortcut" href="./fechamento.html" data-tooltip="Mensal por setor" aria-label="Abrir Mensal por setor">
+            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
             <span class="side-text">Mensal por setor</span>
             <small>Abertura completa</small>
           </a>
-          <button class="side-link side-link-sub tabbtn" data-tab="classif-nf" data-tooltip="Classificar NF" type="button">
-            <span class="side-icon" aria-hidden="true">N</span>
+          <button class="side-link side-link-sub tabbtn" data-tab="classif-nf" data-tooltip="Classificar NF" type="button" aria-label="Abrir Classificar NF">
+            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5L14 3.5ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg></span>
             <span class="side-text">Classificar NF</span>
             <small>Distribuicao operacional</small>
           </button>
-          <button class="side-link side-link-sub tabbtn" data-tab="nf-revisao" data-tooltip="Revisao" type="button">
-            <span class="side-icon" aria-hidden="true">R</span>
+          <button class="side-link side-link-sub tabbtn" data-tab="nf-revisao" data-tooltip="Revisao" type="button" aria-label="Abrir Revisao">
+            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5V3Zm2 2v14h10V5H7Zm2 3h6v2H9V8Zm0 4h6v2H9v-2Z"/></svg></span>
             <span class="side-text">Revisao</span>
             <small>Notas classificadas</small>
           </button>
-          <button class="side-link side-link-sub tabbtn" data-tab="nf-historico" data-tooltip="Historico" type="button">
-            <span class="side-icon" aria-hidden="true">H</span>
+          <button class="side-link side-link-sub tabbtn" data-tab="nf-historico" data-tooltip="Historico" type="button" aria-label="Abrir Historico">
+            <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 1-8.5 6H2l3.8-3.8L9.6 9H7a7 7 0 1 0 6-4V3Zm-1 4h2v6l4 2-.9 1.8-5.1-2.6V7Z"/></svg></span>
             <span class="side-text">Historico</span>
             <small>Trilha de lancamentos</small>
           </button>
@@ -95,6 +95,36 @@
          </div>
        </div>
     </aside>
+
+    <nav class="mobile-nav" aria-label="Navegacao principal mobile">
+      <button class="mobile-nav-item tabbtn is-active" data-tab="dash" type="button" aria-label="Abrir Dashboard">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg></span>
+        <span>Dashboard</span>
+      </button>
+      <button class="mobile-nav-item tabbtn" data-tab="classif" type="button" aria-label="Abrir Classificacao">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4V4Zm0 6h10v3H4v-3Zm0 6h16v3H4v-3Zm13.5-6 1.7 1.7L23 7.9 21.6 6.5l-2.4 2.4-.3-.3-1.4 1.4Z"/></svg></span>
+        <span>Classificacao</span>
+      </button>
+      <button class="mobile-nav-item tabbtn" data-tab="classif-nf" type="button" aria-label="Abrir Classificar NF">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5L14 3.5ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg></span>
+        <span>NF</span>
+      </button>
+      <a class="mobile-nav-item" href="./fechamento.html" aria-label="Abrir Grade Mensal">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
+        <span>Grade</span>
+      </a>
+      <details class="mobile-more">
+        <summary class="mobile-nav-item mobile-nav-more-trigger" aria-label="Abrir mais modulos">
+          <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg></span>
+          <span>Mais</span>
+        </summary>
+        <div class="mobile-more-panel">
+          <button class="mobile-more-link tabbtn" data-tab="items" type="button">Itens detalhados</button>
+          <button class="mobile-more-link tabbtn" data-tab="nf-revisao" type="button">Revisao</button>
+          <button class="mobile-more-link tabbtn" data-tab="nf-historico" type="button">Historico</button>
+        </div>
+      </details>
+    </nav>
 
     <main class="main">
       <div class="wrap">

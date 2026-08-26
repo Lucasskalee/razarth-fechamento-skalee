@@ -1024,8 +1024,14 @@ function scheduleRealtimeReload() {
 }
 
 function setTab(targetId) {
-  document.querySelectorAll(".tabbtn").forEach((button) => button.classList.toggle("is-active", button.dataset.tab === targetId));
+  document.querySelectorAll(".tabbtn").forEach((button) => {
+    const isActive = button.dataset.tab === targetId;
+    button.classList.toggle("is-active", isActive);
+    if (isActive) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  });
   document.querySelectorAll(".tab").forEach((section) => section.classList.toggle("is-active", section.id === targetId));
+  document.querySelectorAll(".mobile-more[open]").forEach((details) => details.removeAttribute("open"));
 }
 
 function updateLocalItem(itemId, patch) {

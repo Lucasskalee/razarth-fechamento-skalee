@@ -16,7 +16,7 @@
 <body>
   <div class="app-shell fechamento-shell">
     <aside class="sidebar vertical-sidebar">
-      <input type="checkbox" role="switch" id="sidebarToggleFechamento" class="sidebar-toggle-input">
+      <input type="checkbox" role="switch" id="sidebarToggleFechamento" class="sidebar-toggle-input" checked>
       <div class="sidebar-top">
         <div class="sidebar-toggle-container">
           <label class="sidebar-toggle" for="sidebarToggleFechamento" aria-label="Alternar menu">
@@ -41,15 +41,20 @@
       </div>
 
       <nav class="side-nav" aria-label="Navegacao do fechamento">
-        <a class="side-link is-active" href="./fechamento.html" data-tooltip="Fechamento">
-          <span class="side-icon" aria-hidden="true">F</span>
+        <a class="side-link is-active" href="./fechamento.html" data-tooltip="Fechamento" aria-label="Abrir Fechamento">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
           <span class="side-text">Fechamento</span>
           <small>Mensal por setor</small>
         </a>
-        <a class="side-link" href="./index.html" data-tooltip="Dashboard">
-          <span class="side-icon" aria-hidden="true">D</span>
+        <a class="side-link" href="./index.html" data-tooltip="Dashboard" aria-label="Abrir Dashboard">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg></span>
           <span class="side-text">Dashboard</span>
           <small>Voltar ao painel</small>
+        </a>
+        <a class="side-link" href="#analiseGerencial" data-tooltip="Analise Gerencial" aria-label="Ir para Analise Gerencial">
+          <span class="side-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm1-8h3v6H5v-6Zm5-5h3v11h-3V6Zm5 3h3v8h-3V9Z"/></svg></span>
+          <span class="side-text">Analise Gerencial</span>
+          <small>Comparativos</small>
         </a>
       </nav>
 
@@ -59,8 +64,23 @@
           <strong id="connectionBadge">Conectando ao Supabase</strong>
           <p id="lastSyncLabel">A leitura da grade, das notas e dos itens acontece sob demanda.</p>
         </div>
-      </div>
+       </div>
     </aside>
+
+    <nav class="mobile-nav fechamento-mobile-nav" aria-label="Navegacao do fechamento mobile">
+      <a class="mobile-nav-item" href="./index.html" aria-label="Abrir Dashboard">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg></span>
+        <span>Dashboard</span>
+      </a>
+      <a class="mobile-nav-item is-active" href="./fechamento.html" aria-current="page" aria-label="Abrir Grade Mensal">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 9H6v9h12v-9Zm0-4H6v2h12V7Z"/></svg></span>
+        <span>Grade</span>
+      </a>
+      <a class="mobile-nav-item" href="#analiseGerencial" aria-label="Ir para Analise Gerencial">
+        <span class="mobile-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm1-8h3v6H5v-6Zm5-5h3v11h-3V6Zm5 3h3v8h-3V9Z"/></svg></span>
+        <span>Analise</span>
+      </a>
+    </nav>
 
     <main class="main">
       <div class="wrap">
