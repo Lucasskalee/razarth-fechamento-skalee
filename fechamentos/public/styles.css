@@ -2355,7 +2355,7 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
   }
 
   .fechamento-mobile-nav{
-    grid-template-columns:repeat(3, minmax(0, 1fr));
+    grid-template-columns:repeat(4, minmax(0, 1fr));
   }
 
   .mobile-nav-item{
@@ -2460,6 +2460,9 @@ tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 24%, transparent
     background:transparent;
     color:rgba(219,234,254,.78);
     text-align:left;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
     box-shadow:none;
     transform:none;
   }

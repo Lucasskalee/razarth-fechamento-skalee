@@ -1,13 +1,18 @@
-const CACHE_NAME = "razarth-cache-v19";
+const CACHE_NAME = "razarth-cache-v21";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./fechamento.html",
+  "./assistente-ia.html",
   "./styles.css",
   "./fechamento.css",
+  "./assistente-ia.css",
   "./manifest.json",
   "./js/main.js",
   "./js/fechamento.js",
+  "./js/assistenteIa.js",
+  "./js/services/aiService.js",
+  "./js/services/closingAnalyticsService.js",
   "./js/services/ui.js",
   "./js/services/dashboard.js",
   "./js/services/filtros.js",
