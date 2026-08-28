@@ -63,6 +63,9 @@ const refs = {
   aiChatMessages: document.getElementById("aiChatMessages"),
   aiChatContext: document.getElementById("aiChatContext"),
   managerCards: document.getElementById("managerCards"),
+  noteReportExportBtn: document.getElementById("noteReportExportBtn"),
+  noteReportSummary: document.getElementById("noteReportSummary"),
+  noteReportList: document.getElementById("noteReportList"),
   storeComparisonChart: document.getElementById("storeComparisonChart"),
   monthlyEvolutionChart: document.getElementById("monthlyEvolutionChart"),
   reasonChart: document.getElementById("reasonChart"),
@@ -880,6 +883,109 @@ function renderManagerCards(model) {
   `;
 }
 
+function buildNoteReport(items = []) {
+  const noteMap = new Map();
+  items.forEach((item) => {
+    const noteKey = item.noteKey || `${item.invoice}||${item.store}||${item.date}`;
+    const note = noteMap.get(noteKey) || {
+      noteKey,
+      invoice: item.invoice || "-",
+      store: item.store || "Loja nao identificada",
+      date: item.date || "",
+      type: item.displayType || item.type || "Outros",
+      value: 0,
+      quantity: 0,
+      sectors: new Map()
+    };
+    const sectorName = item.sector || "Nao classificado";
+    const sector = note.sectors.get(sectorName) || { name: sectorName, value: 0, quantity: 0, products: [] };
+    const value = Number(item.value || 0);
+    const quantity = Number(item.quantity || 0);
+    sector.value += value;
+    sector.quantity += quantity;
+    sector.products.push(item);
+    note.value += value;
+    note.quantity += quantity;
+    note.sectors.set(sectorName, sector);
+    noteMap.set(noteKey, note);
+  });
+
+  return [...noteMap.values()]
+    .map((note) => ({ ...note, sectors: [...note.sectors.values()].sort((a, b) => b.value - a.value) }))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.value - a.value);
+}
+
+function noteReportItems(model) {
+  return state.manager.items.filter((item) => isSamePeriod(item, model.currentPeriod));
+}
+
+function renderNoteReport(model) {
+  if (!refs.noteReportList || !refs.noteReportSummary) return;
+  const notes = buildNoteReport(noteReportItems(model));
+  const totalValue = notes.reduce((sum, note) => sum + note.value, 0);
+  const sectorNames = new Set(notes.flatMap((note) => note.sectors.map((sector) => sector.name)));
+  const productCount = notes.reduce((sum, note) => sum + note.sectors.reduce((sectorSum, sector) => sectorSum + sector.products.length, 0), 0);
+
+  refs.noteReportSummary.innerHTML = `
+    <div class="summary-card"><div class="label">Notas</div><strong>${notes.length}</strong><div class="hint">no recorte atual</div></div>
+    <div class="summary-card"><div class="label">Setores</div><strong>${sectorNames.size}</strong><div class="hint">setores identificados</div></div>
+    <div class="summary-card"><div class="label">Itens</div><strong>${productCount}</strong><div class="hint">produtos nas notas</div></div>
+    <div class="summary-card"><div class="label">Valor total</div><strong>${brl(totalValue)}</strong><div class="hint">soma das notas filtradas</div></div>
+  `;
+  refs.noteReportExportBtn.disabled = !notes.length;
+
+  if (!notes.length) {
+    refs.noteReportList.innerHTML = '<div class="empty">Nenhuma nota encontrada no recorte selecionado.</div>';
+    return;
+  }
+
+  refs.noteReportList.innerHTML = notes.map((note) => `
+    <details class="note-report-card">
+      <summary>
+        <span class="note-report-identity"><strong>NF ${escapeHtml(note.invoice)}</strong><small>${escapeHtml(note.store)} | ${formatDate(note.date)} | ${escapeHtml(note.type)}</small></span>
+        <span class="note-report-metric"><strong>${note.sectors.length}</strong><small>setor(es)</small></span>
+        <span class="note-report-metric"><strong>${note.sectors.reduce((sum, sector) => sum + sector.products.length, 0)}</strong><small>item(ns)</small></span>
+        <span class="note-report-total">${brl(note.value)}</span>
+      </summary>
+      <div class="note-report-sectors">
+        ${note.sectors.map((sector) => `
+          <section class="note-report-sector">
+            <div class="note-report-sector-head">
+              <div><strong>${escapeHtml(sector.name)}</strong><small>${num(note.value ? (sector.value / note.value) * 100 : 0)}% da nota</small></div>
+              <span>${brl(sector.value)}</span>
+            </div>
+            <div class="table-wrap note-report-table-wrap">
+              <table>
+                <thead><tr><th>Produto</th><th>Quantidade</th><th>Valor unitario</th><th>Total</th></tr></thead>
+                <tbody>${sector.products.map((item) => `
+                  <tr><td>${escapeHtml(item.product)}</td><td>${num(item.quantity)}</td><td>${brl(item.unitValue)}</td><td>${brl(item.value)}</td></tr>
+                `).join("")}</tbody>
+              </table>
+            </div>
+          </section>
+        `).join("")}
+      </div>
+    </details>
+  `).join("");
+}
+
+function exportNoteReportCsv() {
+  const model = buildManagerModel();
+  const notes = buildNoteReport(noteReportItems(model));
+  if (!notes.length) return showToast("warning", "Nao ha notas para exportar neste recorte.");
+  const quote = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const rows = [["Nota", "Loja", "Data", "Tipo", "Setor", "Produto", "Quantidade", "Valor unitario", "Valor total"]];
+  notes.forEach((note) => note.sectors.forEach((sector) => sector.products.forEach((item) => rows.push([
+    note.invoice, note.store, note.date, note.type, sector.name, item.product, item.quantity, item.unitValue, item.value
+  ]))));
+  const csv = `\uFEFF${rows.map((row) => row.map(quote).join(";")).join("\r\n")}`;
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  link.download = `relatorio-notas-${model.currentPeriod.year}-${String(model.currentPeriod.month).padStart(2, "0")}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 function chartOptions() {
   const styles = getComputedStyle(document.documentElement);
   return {
@@ -1231,6 +1337,7 @@ function renderManager() {
     ? "Uso/Consumo selecionado. Os indicadores de perda real ficam zerados para evitar mistura de natureza operacional."
     : `${model.currentItems.length} item(ns) de perda real em ${monthLabel(model.currentPeriod.year, model.currentPeriod.month)}.`);
   renderManagerCards(model);
+  renderNoteReport(model);
   renderStoreComparison(model);
   renderProductList(refs.increaseProducts, model.topIncrease, "Nenhum produto aumentou a perda contra o mes anterior.");
   renderProductList(refs.decreaseProducts, model.topDecrease, "Nenhum produto reduziu a perda contra o mes anterior.");
@@ -2220,6 +2327,7 @@ function bindEvents() {
     syncManagerStateFromFilters();
     loadManagerData();
   });
+  refs.noteReportExportBtn?.addEventListener("click", exportNoteReportCsv);
 
   refs.aiAnalyzeBtn?.addEventListener("click", analyzeWithAi);
   refs.aiChatForm?.addEventListener("submit", sendAiChatMessage);

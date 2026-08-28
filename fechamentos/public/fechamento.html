@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css?v=20260824-2">
-  <link rel="stylesheet" href="./fechamento.css?v=20260820-3">
+  <link rel="stylesheet" href="./fechamento.css?v=20260828-1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -202,6 +202,19 @@
           </section>
           <section class="cards gerencial-kpis" id="managerCards"></section>
 
+          <section class="gerencial-block note-report-block" aria-labelledby="noteReportTitle">
+            <div class="panel-head">
+              <div>
+                <span class="panel-tag">Relatorio por nota</span>
+                <h3 id="noteReportTitle">Notas, setores e produtos</h3>
+                <p class="muted-note">Abra uma nota para conferir a participacao de cada setor e os produtos que compoem o valor.</p>
+              </div>
+              <button id="noteReportExportBtn" type="button">Exportar CSV</button>
+            </div>
+            <div id="noteReportSummary" class="summary-grid note-report-summary"></div>
+            <div id="noteReportList" class="note-report-list"></div>
+          </section>
+
           <div class="gerencial-grid">
             <section class="gerencial-block">
               <div class="panel-head">
@@ -373,6 +386,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="./js/fechamento.js?v=20260825-1"></script>
+  <script type="module" src="./js/fechamento.js?v=20260828-1"></script>
 </body>
 </html>
