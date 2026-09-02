@@ -2,6 +2,7 @@ import { getSupabaseClient, TABLES } from "../config/supabase.js";
 import { clearFechamentoCache, TABLE_MONTHLY_ENTRY, TABLE_MONTHLY_NOTE, TABLE_MONTHLY_OBSERVATION } from "./fechamento.js";
 import { clearMonthlyClosingCache } from "./fechamentoMensalApi.js";
 import { classifySector, classifyType, competenceKey, detailType, monthKey, normalizeReason, safeStore } from "./classificacao.js";
+import { observeQuery } from "./queryTelemetry.js";
 
 const STORAGE_KEY = "gestao_perdas_local_db_v2";
 const PRIMARY_PERSISTENCE = "remote";
@@ -30,6 +31,9 @@ const RESET_IMPORT_RPC = "reset_import_data";
 const SUPABASE_PAGE_SIZE = 1000;
 const NOTE_READ_COLUMNS = "note_key, access_key, source_file, invoice, store, emission_date, emission_month, competence_month, operation, type, display_type, sector, sector_manual, total_value, item_count";
 const ITEM_READ_COLUMNS = "id, note_key, access_key, source_file, invoice, store, emission_date, emission_month, competence_month, operation, type, display_type, sector, sector_manual, product, quantity, unit_value, value, reason, selected";
+const DASHBOARD_SUMMARY_VIEW = "v_loss_dashboard_summary";
+const DASHBOARD_CACHE_TTL_MS = 60 * 1000;
+const dashboardSummaryCache = new Map();
 
 function setPersistence(mode, detail = "") {
   persistenceState.mode = mode;
@@ -476,29 +480,46 @@ export async function loadAllItems() {
 }
 
 export async function loadDashboardSummary() {
-  const client = getSupabaseClient();
-  const notes = await loadNotesFromDatabase(client);
-  const visibleNotes = notes.filter((note) => note.type !== "Outros");
-  const totalsByType = visibleNotes.reduce((totals, note) => {
-    totals[note.type] = (totals[note.type] || 0) + Number(note.totalValue || 0);
-    return totals;
-  }, {});
-  const totalsByStore = visibleNotes.reduce((totals, note) => {
-    totals[note.store] = (totals[note.store] || 0) + Number(note.totalValue || 0);
-    return totals;
-  }, {});
-  const topStore = Object.entries(totalsByStore).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+  const cacheKey = "dashboard:summary";
+  const cached = dashboardSummaryCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
 
-  return {
-    notes,
-    summary: {
-      noteCount: visibleNotes.length,
-      totalValue: visibleNotes.reduce((sum, note) => sum + Number(note.totalValue || 0), 0),
-      lossValue: Number(totalsByType.Perdas || 0),
-      usageValue: Number(totalsByType["Uso/Consumo"] || 0),
-      topStore
-    }
+  const client = getSupabaseClient();
+  const { data, error } = await observeQuery("dashboard summary", client
+    .from(DASHBOARD_SUMMARY_VIEW)
+    .select("store, year, month_number, type, sector, total_value, total_items, total_notes, classified_items, unclassified_items"));
+  if (error) {
+    error.userMessage = "Nao foi possivel carregar o resumo compacto do Dashboard.";
+    throw error;
+  }
+
+  const visibleRows = (data || []).filter((row) => row.type !== "Outros");
+  const totalsByType = visibleRows.reduce((totals, row) => {
+    totals[row.type] = (totals[row.type] || 0) + Number(row.total_value || 0);
+    return totals;
+  }, {});
+  const totalsByStore = visibleRows.reduce((totals, row) => {
+    totals[row.store] = (totals[row.store] || 0) + Number(row.total_value || 0);
+    return totals;
+  }, {});
+  const summary = {
+    noteCount: visibleRows.reduce((sum, row) => sum + Number(row.total_notes || 0), 0),
+    totalValue: visibleRows.reduce((sum, row) => sum + Number(row.total_value || 0), 0),
+    lossValue: Number(totalsByType.Perdas || 0),
+    usageValue: Number(totalsByType["Uso/Consumo"] || 0),
+    topStore: Object.entries(totalsByStore).sort((a, b) => b[1] - a[1])[0]?.[0] || "-",
+    totalItems: visibleRows.reduce((sum, row) => sum + Number(row.total_items || 0), 0),
+    classifiedItems: visibleRows.reduce((sum, row) => sum + Number(row.classified_items || 0), 0),
+    unclassifiedItems: visibleRows.reduce((sum, row) => sum + Number(row.unclassified_items || 0), 0),
+    rows: visibleRows
   };
+  const value = { notes: [], summary };
+  dashboardSummaryCache.set(cacheKey, { value, expiresAt: Date.now() + DASHBOARD_CACHE_TTL_MS });
+  return value;
+}
+
+export function invalidateDashboardSummaryCache() {
+  dashboardSummaryCache.clear();
 }
 
 export async function loadAllData({ prefetchedNotes = null } = {}) {

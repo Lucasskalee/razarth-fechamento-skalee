@@ -1,8 +1,8 @@
 import { brl, formatDate, groupItemsByNote, normalizeReason } from "./services/classificacao.js";
-import { clearDatabase, deleteNote, getPersistenceInfo, importXmlFiles, loadAllData, loadDashboardSummary, updateCompetenceMonthForNote, updateItemField, updateReasonForNote, updateSectorForNote } from "./services/importacao.js";
+import { clearDatabase, deleteNote, getPersistenceInfo, importXmlFiles, invalidateDashboardSummaryCache, loadAllData, loadDashboardSummary, updateCompetenceMonthForNote, updateItemField, updateReasonForNote, updateSectorForNote } from "./services/importacao.js";
 import { applyFilters, buildNoteOptions, refreshFilters } from "./services/filtros.js";
 import { exportCsv, openPrintReport, renderClassification, renderDashboard, renderDashboardSummary, renderItems } from "./services/dashboard.js";
-import { subscribeRealtime } from "./services/realtime.js";
+import { getRealtimeImpact, subscribeRealtime } from "./services/realtime.js";
 import { initUi, touchLastSync } from "./services/ui.js";
 import { searchNf as searchNfService, loadNfItems } from "./services/notas.js";
 import { ensureAuthenticated } from "./services/auth.js?v=20260820-1";
@@ -197,7 +197,9 @@ const state = {
     currentNote: null,
     entries: [],
     suggestion: null
-  }
+  },
+  detailsLoaded: false,
+  realtimeImpacts: new Set()
 };
 
 function sanitizeText(value) {
@@ -1018,11 +1020,29 @@ async function reloadFromDatabase({ loadingMessage, statusMessage, emptyMessage,
   }
 }
 
-function scheduleRealtimeReload() {
+function scheduleRealtimeReload(payload) {
+  const impact = getRealtimeImpact(payload);
+  impact.caches.forEach((cacheKey) => state.realtimeImpacts.add(cacheKey));
   clearTimeout(state.realtimeTimer);
   state.realtimeTimer = window.setTimeout(() => {
-    reloadFromDatabase({ statusMessage: "Dados atualizados automaticamente.", emptyMessage: "Nenhum XML importado ainda." });
+    state.realtimeImpacts.clear();
+    invalidateDashboardSummaryCache();
+    loadDashboardSummary()
+      .then((result) => {
+        renderDashboardSummary(result.summary, refs);
+        setStatus("success", "Resumo atualizado automaticamente.");
+      })
+      .catch((error) => console.error("[Dashboard Realtime]", error));
   }, 500);
+}
+
+async function loadDashboardDetails() {
+  if (state.detailsLoaded) return;
+  await reloadFromDatabase({
+    statusMessage: "Detalhes oficiais carregados automaticamente do Supabase.",
+    emptyMessage: "Nenhum XML importado ainda."
+  });
+  state.detailsLoaded = true;
 }
 
 function setTab(targetId) {
@@ -1322,7 +1342,12 @@ function bindEvents() {
     }
   });
 
-  document.querySelectorAll(".tabbtn").forEach((button) => button.addEventListener("click", () => setTab(button.dataset.tab)));
+  document.querySelectorAll(".tabbtn").forEach((button) => button.addEventListener("click", () => {
+    setTab(button.dataset.tab);
+    if (["classif", "items", "classif-nf", "nf-revisao", "nf-historico"].includes(button.dataset.tab)) {
+      loadDashboardDetails().catch((error) => console.error("[Dashboard details]", error));
+    }
+  }));
 
   refs.nfSearchBtn?.addEventListener("click", searchNf);
   refs.nfReadBarcodeBtn?.addEventListener("click", () => {
@@ -1362,11 +1387,9 @@ async function init() {
   bindEvents();
   openTabFromHash();
   window.addEventListener("hashchange", openTabFromHash);
-  let prefetchedNotes = null;
   try {
     setLoading(true, "Carregando resumo do Dashboard...");
     const initial = await loadDashboardSummary();
-    prefetchedNotes = initial.notes;
     renderDashboardSummary(initial.summary, refs);
     setStatus("success", "Resumo carregado. Os detalhes estao sendo atualizados em segundo plano.");
   } catch (error) {
@@ -1375,12 +1398,6 @@ async function init() {
   } finally {
     setLoading(false);
   }
-  await reloadFromDatabase({
-    statusMessage: "Dados oficiais carregados automaticamente do Supabase.",
-    emptyMessage: "Nenhum XML importado ainda.",
-    prefetchedNotes
-  });
-
   document.querySelectorAll("[data-dashboard-view]").forEach((button) => {
     button.addEventListener("click", () => {
       state.dashboardView = button.dataset.dashboardView || "all";
@@ -1393,7 +1410,7 @@ async function init() {
     });
   });
   try {
-    state.realtimeCleanup = await subscribeRealtime(() => scheduleRealtimeReload());
+    state.realtimeCleanup = await subscribeRealtime((payload) => scheduleRealtimeReload(payload));
   } catch (error) {
     console.error(error);
     setStatus("warning", error.userMessage || "Realtime indisponivel. O Supabase continua sendo a fonte oficial, mas sem atualizacao automatica.");

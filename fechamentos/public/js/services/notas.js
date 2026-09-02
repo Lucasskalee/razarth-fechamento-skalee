@@ -13,6 +13,10 @@
  */
 
 import { getSupabaseClient, TABLES } from "../config/supabase.js";
+import { observeQuery } from "./queryTelemetry.js";
+
+const ITEMS_CACHE_TTL_MS = 5 * 60 * 1000;
+const itemsCache = new Map();
 
 // Mapa de inferência de código de loja a partir do nome completo
 const STORE_PATTERNS = [
@@ -123,7 +127,7 @@ export async function searchNf(numero, allNotes = []) {
   // 2. Consulta Supabase direta — nota pode estar fora do filtro ativo
   try {
     const client = getSupabaseClient();
-    const { data: exactMatch, error: exactError } = await client
+    const { data: exactMatch, error: exactError } = await observeQuery("search invoice", client
       .from(TABLES.notes)
       .select(
         "note_key, access_key, invoice, store, emission_date, competence_month, " +
@@ -131,7 +135,7 @@ export async function searchNf(numero, allNotes = []) {
       )
       .order("emission_date", { ascending: false })
       .in("invoice", candidates)
-      .limit(20);
+      .limit(20));
 
     if (exactError) {
       const wrapped = new Error(`Falha ao buscar NF ${candidates[0]} no banco.`);
@@ -143,7 +147,7 @@ export async function searchNf(numero, allNotes = []) {
 
     if (!data.length) {
       const accessCandidates = candidates.slice(0, 2);
-      const { data: accessMatch, error: accessError } = await client
+      const { data: accessMatch, error: accessError } = await observeQuery("search access key", client
         .from(TABLES.notes)
         .select(
           "note_key, access_key, invoice, store, emission_date, competence_month, " +
@@ -151,7 +155,7 @@ export async function searchNf(numero, allNotes = []) {
         )
         .or(accessCandidates.map((candidate) => `access_key.eq.${candidate}`).join(","))
         .order("emission_date", { ascending: false })
-        .limit(20);
+        .limit(20));
 
       if (accessError) {
         const wrapped = new Error(`Falha ao buscar NF ${candidates[0]} no banco.`);
@@ -165,35 +169,10 @@ export async function searchNf(numero, allNotes = []) {
     if (!data.length) return null;
 
     const notas = data.map(mapRowToNota);
-    const noteKeys = [...new Set(notas.map((nota) => nota.noteKey).filter(Boolean))];
-    if (noteKeys.length) {
-      const { data: itemRows } = await client
-        .from(TABLES.items)
-        .select("note_key, product, quantity, unit_value, value, reason, sector")
-        .in("note_key", noteKeys)
-        .order("item_index", { ascending: true });
-      const itemsByNote = new Map();
-      (itemRows || []).forEach((item) => {
-        const key = item.note_key;
-        if (!itemsByNote.has(key)) itemsByNote.set(key, []);
-        itemsByNote.get(key).push({
-          produto: item.product || "Produto",
-          quantidade: Number(item.quantity || 0),
-          valorUnitario: Number(item.unit_value || 0),
-          valor: Number(item.value || 0),
-          setor: item.sector || "",
-          motivo: item.reason || ""
-        });
-      });
-      notas.forEach((nota) => {
-        nota.itens = itemsByNote.get(nota.noteKey) || [];
-        nota.totalItens = nota.itens.length || nota.totalItens;
-      });
-    }
-
+    // Itens são carregados somente após o usuário escolher uma nota.
     return notas;
   } catch (error) {
-    if (!error.userMessage) error.userMessage = `Erro ao consultar NF ${invoice}.`;
+    if (!error.userMessage) error.userMessage = `Erro ao consultar NF ${candidates[0]}.`;
     throw error;
   }
 }
@@ -206,16 +185,19 @@ export async function searchNf(numero, allNotes = []) {
  */
 export async function loadNfItems(noteKey) {
   if (!noteKey) return [];
+  const cached = itemsCache.get(noteKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.items;
+  itemsCache.delete(noteKey);
   try {
     const client = getSupabaseClient();
-    const { data, error } = await client
+    const { data, error } = await observeQuery("load note items", client
       .from(TABLES.items)
       .select("product, quantity, unit_value, value, reason, sector")
       .eq("note_key", noteKey)
-      .order("item_index", { ascending: true });
+      .order("item_index", { ascending: true }));
 
     if (error) throw error;
-    return (data || []).map((row) => ({
+    const items = (data || []).map((row) => ({
       produto: row.product || "Produto",
       quantidade: Number(row.quantity || 0),
       valorUnitario: Number(row.unit_value || 0),
@@ -223,8 +205,15 @@ export async function loadNfItems(noteKey) {
       setor: row.sector || "",
       motivo: row.reason || ""
     }));
+    itemsCache.set(noteKey, { items, expiresAt: Date.now() + ITEMS_CACHE_TTL_MS });
+    return items;
   } catch (error) {
     console.error("[notas] Falha ao carregar itens:", error);
     return [];
   }
+}
+
+export function invalidateNfItemsCache(noteKey = null) {
+  if (noteKey) itemsCache.delete(noteKey);
+  else itemsCache.clear();
 }

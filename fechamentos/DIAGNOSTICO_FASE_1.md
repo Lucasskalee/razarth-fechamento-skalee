@@ -10,6 +10,50 @@ Este diagnóstico cobre o frontend e os artefatos SQL do módulo `fechamentos`. 
 
 O maior gargalo está no Dashboard principal (`index.html`): sua inicialização chama `loadAllData()`, que busca **todas as colunas de todas as notas e, em seguida, todas as colunas de todos os itens**. Só depois o navegador associa itens às notas, filtra, soma, agrupa e renderiza todos os indicadores. A paginação de 1.000 registros nessa rotina é apenas paginação técnica de transporte; ela percorre a tabela inteira e não limita o conjunto exibido.
 
+## Atualização da implementação — 2026-09-02
+
+Esta entrega aplica apenas mudanças de baixo risco sobre o diagnóstico:
+
+- a busca de NF não baixa mais os itens das 20 notas retornadas antes da seleção;
+- itens consultados na tela de NF permanecem em cache por cinco minutos e são
+  invalidados quando o Realtime altera o `note_key` correspondente;
+- consultas da busca e do detalhe registram duração e quantidade de linhas
+  somente em desenvolvimento/localhost;
+- foi adicionada uma tabela opcional de agregados mensais em
+  `supabase_analytics_layer.sql`, sem escrita aberta pelo frontend.
+
+O carregamento integral do Dashboard e o reload global disparado pelo Realtime
+continuam sendo riscos conhecidos e exigem uma próxima etapa com view/RPC
+agregada e uma mudança coordenada no modelo de estado da tela. Não foram
+marcados como resolvidos nesta fase.
+
+## Performance Architecture V1 — Dashboard e Realtime
+
+### Fluxo antes
+
+- Dashboard: `loadDashboardSummary()` lia todas as notas e depois
+  `loadAllData()` lia novamente as notas e todos os itens, em lotes de 1.000.
+- Os KPIs, agrupamentos, pendências, rankings e gráficos eram calculados sobre
+  os arrays brutos no navegador.
+- Cada evento Realtime agendava `reloadFromDatabase()` no Dashboard.
+- Fechamento mensal recarregava grade, análise gerencial e detalhes abertos.
+
+Requests, duração, bytes e cardinalidades reais: **NÃO MEDIDO**.
+
+### Fluxo depois
+
+- Dashboard inicia com uma consulta à view compacta
+  `v_loss_dashboard_summary`, retornando linhas agregadas por loja/período/tipo/setor.
+- O resumo possui TTL de 60 segundos e telemetria em desenvolvimento.
+- Notas e itens brutos só são carregados quando uma aba de detalhe é acessada.
+- Eventos Realtime são coalescidos em 500 ms, produzem um mapa de impacto e
+  invalidam o resumo/cache de itens relacionado; não executam carga global.
+- No fechamento mensal, somente uma célula aberta é atualizada após um evento
+  relevante. Sem célula aberta, nenhum refetch é executado.
+
+Requests, duração, bytes e cardinalidades reais: **NÃO MEDIDO**; a redução
+estrutural de payload e de cargas integrais foi validada por inspeção estática.
+
 O Realtime agrava esse custo: qualquer `INSERT`, `UPDATE` ou `DELETE` em `loss_notes` ou `loss_items` provoca, após debounce de 500 ms, uma nova carga integral do Dashboard.
 
 A página de fechamento mensal está mais próxima do fluxo desejado: a lista de notas tem páginas de 25 e os itens são buscados por `note_key`. Porém, a abertura da tela ainda busca todas as notas do ano para construir a grade e, logo depois, todos os itens do recorte gerencial para calcular a análise no frontend. Ao abrir uma célula, o primeiro item da primeira nota é carregado automaticamente, mesmo sem escolha explícita do usuário.
