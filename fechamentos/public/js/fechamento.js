@@ -17,7 +17,7 @@ import {
 } from "./services/fechamento.js?v=20260511-3";
 import { ensureAuthenticated } from "./services/auth.js?v=20260820-1";
 import { requestClosingAnalysis, requestClosingChat } from "./services/analiseIa.js?v=20260820-2";
-import { subscribeRealtime } from "./services/realtime.js?v=20260825-1";
+import { getRealtimeImpact, subscribeRealtime } from "./services/realtime.js?v=20260825-1";
 
 const refs = {
   storeFilter: document.getElementById("storeFilter"),
@@ -146,7 +146,8 @@ const state = {
   toastTimer: null,
   realtimeTimer: null,
   realtimeCleanup: null,
-  realtimeRefreshing: false
+  realtimeRefreshing: false,
+  realtimeImpact: null
 };
 
 function defaultSummary() {
@@ -2118,20 +2119,23 @@ async function loadManagerData({ silent = false } = {}) {
 
 async function refreshFromRealtime() {
   if (state.realtimeRefreshing || state.savingCell || state.savingNote || state.savingItems || state.savingItemIds.size) {
-    scheduleRealtimeRefresh(1000);
+    scheduleRealtimeRefresh(null, 1000);
     return;
   }
 
   state.realtimeRefreshing = true;
   try {
-    clearFechamentoCache();
-    await loadGrid({ silent: true });
-    await loadManagerData({ silent: true });
+    const impact = state.realtimeImpact;
+    state.realtimeImpact = null;
     if (state.drawerOpen && state.selectedCell && !state.selectedCell.isHistorical) {
+      const sameNote = !impact?.noteKey || state.notes.some((note) => note.noteKey === impact.noteKey);
+      const sameStore = !impact?.store || state.selectedCell.store === impact.store;
+      if (!sameNote && !sameStore) return;
+      invalidateCellCache(state.selectedCell, state.filters);
       state.notesPage = 0;
       await loadNotes({ refreshItems: true });
     }
-    showToast("success", "Fechamento atualizado automaticamente pelo banco.", 2500);
+    if (state.drawerOpen) showToast("success", "Detalhes da celula atualizados automaticamente.", 2500);
   } catch (error) {
     console.error("[Fechamento Realtime]", error);
   } finally {
@@ -2139,7 +2143,8 @@ async function refreshFromRealtime() {
   }
 }
 
-function scheduleRealtimeRefresh(delay = 500) {
+function scheduleRealtimeRefresh(payload, delay = 500) {
+  state.realtimeImpact = getRealtimeImpact(payload);
   clearTimeout(state.realtimeTimer);
   state.realtimeTimer = window.setTimeout(refreshFromRealtime, delay);
 }
@@ -2352,7 +2357,7 @@ function bindEvents() {
   });
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") scheduleRealtimeRefresh(150);
+    if (document.visibilityState === "visible") scheduleRealtimeRefresh(null, 150);
   });
 
   window.addEventListener("beforeunload", () => {
@@ -2379,7 +2384,7 @@ async function init() {
   fillDecisionForm({});
   await loadManagerData({ silent: true });
   try {
-    state.realtimeCleanup = await subscribeRealtime(() => scheduleRealtimeRefresh());
+    state.realtimeCleanup = await subscribeRealtime((payload) => scheduleRealtimeRefresh(payload));
   } catch (error) {
     console.error("[Fechamento Realtime]", error);
     setStatus("warning", "Dados carregados, mas a atualizacao automatica esta temporariamente indisponivel.");
