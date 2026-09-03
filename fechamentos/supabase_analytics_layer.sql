@@ -1,6 +1,7 @@
 -- Agregados mensais para consultas históricas sem transferir loss_items bruto.
 -- Aplicar após supabase_schema.sql e revisar as policies conforme o tenant model.
-create or replace view public.v_loss_dashboard_summary as
+create or replace view public.v_loss_dashboard_summary
+with (security_invoker = true) as
 with item_metrics as (
   select
     note_key,

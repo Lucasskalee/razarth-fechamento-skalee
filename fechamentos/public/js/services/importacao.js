@@ -35,6 +35,12 @@ const DASHBOARD_SUMMARY_VIEW = "v_loss_dashboard_summary";
 const DASHBOARD_CACHE_TTL_MS = 60 * 1000;
 const dashboardSummaryCache = new Map();
 
+function isMissingBackendObject(error) {
+  return error?.code === "PGRST205"
+    || error?.status === 404
+    || /schema cache|could not find the table/i.test(String(error?.message || ""));
+}
+
 function setPersistence(mode, detail = "") {
   persistenceState.mode = mode;
   persistenceState.detail = detail;
@@ -489,6 +495,30 @@ export async function loadDashboardSummary() {
     .from(DASHBOARD_SUMMARY_VIEW)
     .select("store, year, month_number, type, sector, total_value, total_items, total_notes, classified_items, unclassified_items"));
   if (error) {
+    if (isMissingBackendObject(error)) {
+      // Keep the dashboard usable until the analytics migration is applied.
+      const notes = await loadNotesFromDatabase(client);
+      const visibleNotes = notes.filter((note) => note.type !== "Outros");
+      const totalsByType = visibleNotes.reduce((totals, note) => {
+        totals[note.type] = (totals[note.type] || 0) + Number(note.totalValue || 0);
+        return totals;
+      }, {});
+      const totalsByStore = visibleNotes.reduce((totals, note) => {
+        totals[note.store] = (totals[note.store] || 0) + Number(note.totalValue || 0);
+        return totals;
+      }, {});
+      return {
+        notes,
+        summary: {
+          noteCount: visibleNotes.length,
+          totalValue: visibleNotes.reduce((sum, note) => sum + Number(note.totalValue || 0), 0),
+          lossValue: Number(totalsByType.Perdas || 0),
+          usageValue: Number(totalsByType["Uso/Consumo"] || 0),
+          topStore: Object.entries(totalsByStore).sort((a, b) => b[1] - a[1])[0]?.[0] || "-",
+          migrationPending: true
+        }
+      };
+    }
     error.userMessage = "Nao foi possivel carregar o resumo compacto do Dashboard.";
     throw error;
   }

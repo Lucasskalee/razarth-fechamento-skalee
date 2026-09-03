@@ -54,6 +54,77 @@ Requests, duração, bytes e cardinalidades reais: **NÃO MEDIDO**.
 Requests, duração, bytes e cardinalidades reais: **NÃO MEDIDO**; a redução
 estrutural de payload e de cargas integrais foi validada por inspeção estática.
 
+## Validação da Performance V1 — 2026-09-02
+
+### A. Migration
+
+**MIGRATION NÃO APLICADA.** O endpoint REST do projeto
+`khevuaohphrwhjasmbsy.supabase.co` respondeu `PGRST205` para
+`v_loss_dashboard_summary`, confirmando que a view ainda não existe no schema
+publicado. Não há `SUPABASE_ACCESS_TOKEN`, credencial de banco ou permissão de
+SQL Editor disponível neste ambiente para aplicar DDL com segurança. Nenhuma
+operação destrutiva foi executada.
+
+O SQL foi revisado contra `supabase_schema.sql`: tabelas, colunas e a FK
+`loss_items.note_key -> loss_notes.note_key` são compatíveis. A view usa
+`security_invoker = true`; não usa `security definer` nem `service_role`.
+
+### B. RLS e isolamento
+
+| Estrutura | Policy/mecanismo | Risco | Status |
+|---|---|---|---|
+| `loss_notes` | RLS habilitado; policies `anon` com `using (true)` | Qualquer cliente com a chave publicável pode ler todas as lojas | **Risco preexistente; isolamento não comprovado** |
+| `loss_items` | RLS habilitado; policies `anon` com `using (true)` | Mesmo risco para itens e notas relacionadas | **Risco preexistente; isolamento não comprovado** |
+| `v_loss_dashboard_summary` | `security_invoker`; herda RLS das tabelas-base | Se publicada sobre as policies atuais, agregará dados globalmente | **Não aplicar até corrigir o modelo de autorização** |
+| `loss_monthly_summary` | RLS habilitado sem policy | Leitura negada por padrão; não utilizável pelo frontend | **Seguro por negação, não integrado** |
+
+O REST confirmou acesso anônimo às tabelas `loss_notes` e `loss_items`.
+Portanto não é possível afirmar que um usuário esteja restrito à sua
+loja/workspace. A migration não deve ser publicada como solução de isolamento.
+
+### C. Smoke tests
+
+- `index.html`: HTTP 200 local.
+- `fechamento.html`: HTTP 200 local.
+- `assistente-ia.html`: HTTP 200 local.
+- Sintaxe dos módulos JavaScript alterados: aprovada.
+- Busca server-side e itens sob demanda: preservados por inspeção dos fluxos.
+- Realtime seletivo: preservado por inspeção; não foi possível executar uma
+  alteração controlada sem credencial de usuário/SQL.
+- Console, requests reais do navegador, payload/bytes e tempo até KPI:
+  **NÃO MEDIDO**.
+
+### D. Comparativo
+
+| Métrica | Antes | Depois | Status |
+|---|---:|---:|---|
+| Requests iniciais do Dashboard | NÃO MEDIDO | NÃO MEDIDO | Não instrumentado historicamente |
+| Registros iniciais | NÃO MEDIDO | NÃO MEDIDO | View não aplicada |
+| Tempo do resumo | NÃO MEDIDO | NÃO MEDIDO | View não aplicada |
+| Itens carregados no boot | Todos os itens no fluxo anterior | 0 no fluxo agregado; fallback legado enquanto view ausente | Estruturalmente validado |
+| Queries por evento Realtime | NÃO MEDIDO | 1 resumo coalescido no Dashboard; 0 no fechamento sem célula aberta | Inspeção estática |
+| Reload global | Existente | Removido do caminho Realtime | Validado por código |
+| Cache de itens | Existente, TTL 5 min | Mantido e invalidado por `note_key` | Validado por código |
+
+### E. Regressão corrigida
+
+Como a view ainda não existe no Supabase, `loadDashboardSummary()` agora
+detecta `PGRST205` e mantém um fallback compatível para o Dashboard. Esse
+fallback é deliberadamente marcado como temporário e mantém a carga pesada
+somente até a migration ser aplicada.
+
+### F. Decisão
+
+**PERFORMANCE V1 AINDA NÃO VALIDADA.**
+
+Motivos objetivos: migration não aplicada, isolamento por tenant inexistente
+nas policies atuais e métricas reais de navegador/Realtime não coletadas.
+
+Próxima etapa recomendada: corrigir primeiro o modelo de autorização/RLS,
+aplicar a view com credencial administrativa controlada e repetir os smoke
+tests e medições. Somente após isso considerar
+`ANALYTICS V1 — CONTEXTO HISTÓRICO DE 3 MESES`.
+
 O Realtime agrava esse custo: qualquer `INSERT`, `UPDATE` ou `DELETE` em `loss_notes` ou `loss_items` provoca, após debounce de 500 ms, uma nova carga integral do Dashboard.
 
 A página de fechamento mensal está mais próxima do fluxo desejado: a lista de notas tem páginas de 25 e os itens são buscados por `note_key`. Porém, a abertura da tela ainda busca todas as notas do ano para construir a grade e, logo depois, todos os itens do recorte gerencial para calcular a análise no frontend. Ao abrir uma célula, o primeiro item da primeira nota é carregado automaticamente, mesmo sem escolha explícita do usuário.
